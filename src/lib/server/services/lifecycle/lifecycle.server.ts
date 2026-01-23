@@ -1,10 +1,9 @@
-const shutdownHandlers: Array<{ name: string; handler: () => Promise<void> }> = [];
+const shutdownHandlers: Array<{ name: string; handler: () => Promise<unknown> }> = [];
 
-export function onShutdown(name: string, handler: () => Promise<void>) {
+export function onShutdown(name: string, handler: () => Promise<unknown>) {
 	shutdownHandlers.push({ name, handler });
 }
 
-// Self-initialize on import
 const shutdown = async () => {
 	for (const { name, handler } of shutdownHandlers) {
 		try {

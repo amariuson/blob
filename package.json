@@ -74,6 +74,7 @@
 		"@opentelemetry/semantic-conventions": "^1.39.0",
 		"dotenv": "^17.2.3",
 		"import-in-the-middle": "^2.0.5",
+		"ioredis": "^5.9.2",
 		"pino": "^10.3.0",
 		"pino-loki": "^3.0.0",
 		"pino-pretty": "^13.1.3",
