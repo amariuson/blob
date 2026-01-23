@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+	font-family: 'Geist';
+	src: url('/fonts/Geist/geist.woff2') format('woff2');
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Geist Mono';
+	src: url('/fonts/Geist/geist-mono.woff2') format('woff2');
+	font-style: normal;
+	font-display: swap;
+}
+
 :root {
 	--radius: 0.625rem;
 	--background: oklch(1 0 0);
@@ -74,6 +88,8 @@
 }
 
 @theme inline {
+  --font-sans: 'Geist', sans-serif;
+	--font-mono: 'Geist Mono', monospace;
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
@@ -113,7 +129,7 @@
 
 @layer base {
 	* {
-		@apply border-border outline-ring/50;
+		@apply border-border antialiased outline-ring/50;
 	}
 	body {
 		@apply bg-background text-foreground;
