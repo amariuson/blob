@@ -12,7 +12,7 @@ import {
 	OTEL_EXPORTER_OTLP_HEADERS,
 	OTEL_SERVICE_NAME
 } from '$env/static/private';
-import { onShutdown } from '$lib/server/lifecycle.server';
+import { onShutdown } from '$services/lifecycle';
 
 const { registerOptions } = createAddHookMessageChannel();
 register('import-in-the-middle/hook.mjs', import.meta.url, registerOptions);

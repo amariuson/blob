@@ -7,7 +7,9 @@ const config = {
 		adapter: adapter(),
 		alias: {
 			$features: 'src/lib/features',
-			'$features/*': 'src/lib/features/*'
+			'$features/*': 'src/lib/features/*',
+			$services: 'src/lib/server/services',
+			'$services/*': 'src/lib/server/services/*'
 		},
 		experimental: {
 			remoteFunctions: true,
