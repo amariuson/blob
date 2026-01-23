@@ -66,6 +66,14 @@
 		"vitest-browser-svelte": "^2.0.1"
 	},
 	"dependencies": {
+		"@opentelemetry/api": "^1.9.0",
+		"@opentelemetry/auto-instrumentations-node": "^0.69.0",
+		"@opentelemetry/exporter-trace-otlp-proto": "^0.211.0",
+		"@opentelemetry/resources": "^2.5.0",
+		"@opentelemetry/sdk-node": "^0.211.0",
+		"@opentelemetry/semantic-conventions": "^1.39.0",
+		"dotenv": "^17.2.3",
+		"import-in-the-middle": "^2.0.5",
 		"postgres": "^3.4.7",
 		"runed": "^0.37.1",
 		"svelte-easy-crop": "^5.0.0",
