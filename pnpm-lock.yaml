@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@kubiks/otel-drizzle':
+        specifier: ^2.1.0
+        version: 2.1.0(@opentelemetry/api@1.9.0)(drizzle-orm@0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(postgres@3.4.8))
       '@kubiks/otel-polar':
         specifier: ^1.0.1
         version: 1.0.1(@opentelemetry/api@1.9.0)(@polar-sh/sdk@0.42.2)
@@ -780,6 +783,13 @@ packages:
 
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
+
+  '@kubiks/otel-drizzle@2.1.0':
+    resolution: {integrity: sha512-9UHb0od3jwa6zTWMyEYPIZcUq5PDaziCmQLMLakSK2zeqy12SFZ3SAGWXJTgEr8valn/Wa+DKVs+Z3aqKQUpvg==}
+    engines: {node: ^18.19.0 || >=20.6.0}
+    peerDependencies:
+      '@opentelemetry/api': '>=1.9.0 <2.0.0'
+      drizzle-orm: '>=0.28.0'
 
   '@kubiks/otel-polar@1.0.1':
     resolution: {integrity: sha512-H5IVV6LXoc2j97JuxUEOemfiHcOplA139BmAcNQuNa+WEpvi9So28iPZMlniEoJ2JiaWIKADBN+leVIoxe1b8Q==}
@@ -4000,6 +4010,11 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@js-sdsl/ordered-map@4.4.2': {}
+
+  '@kubiks/otel-drizzle@2.1.0(@opentelemetry/api@1.9.0)(drizzle-orm@0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(postgres@3.4.8))':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      drizzle-orm: 0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(postgres@3.4.8)
 
   '@kubiks/otel-polar@1.0.1(@opentelemetry/api@1.9.0)(@polar-sh/sdk@0.42.2)':
     dependencies:
