@@ -1,6 +1,1 @@
-export {
-	traced,
-	withSpan,
-	addSpanEvent,
-	setSpanAttributes,
-} from './tracing.server';
+export { traced, withSpan, addSpanEvent, setSpanAttributes } from './tracing.server';
