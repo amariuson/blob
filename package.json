@@ -66,6 +66,7 @@
 		"vitest-browser-svelte": "^2.0.1"
 	},
 	"dependencies": {
+		"@kubiks/otel-polar": "^1.0.1",
 		"@kubiks/otel-resend": "^1.1.0",
 		"@opentelemetry/api": "^1.9.0",
 		"@opentelemetry/auto-instrumentations-node": "^0.69.0",
@@ -73,7 +74,9 @@
 		"@opentelemetry/resources": "^2.5.0",
 		"@opentelemetry/sdk-node": "^0.211.0",
 		"@opentelemetry/semantic-conventions": "^1.39.0",
+		"@polar-sh/sdk": "^0.42.2",
 		"better-svelte-email": "^1.4.0",
+		"date-fns": "^4.1.0",
 		"dotenv": "^17.2.3",
 		"import-in-the-middle": "^2.0.5",
 		"ioredis": "^5.9.2",
@@ -85,6 +88,7 @@
 		"runed": "^0.37.1",
 		"svelte-easy-crop": "^5.0.0",
 		"svelte-toolbelt": "^0.10.6",
-		"uuidv7": "^1.1.0"
+		"uuidv7": "^1.1.0",
+		"zod": "^4.3.6"
 	}
 }
