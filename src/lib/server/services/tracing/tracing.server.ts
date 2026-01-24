@@ -63,21 +63,22 @@ export function tracedSync<Args extends unknown[], R>(
 	fn: (...args: Args) => R
 ): (...args: Args) => R {
 	const wrapper = function (...args: Args): R {
-		const span = tracer.startSpan(name);
-		try {
-			const result = fn(...args);
-			span.setStatus({ code: SpanStatusCode.OK });
-			return result;
-		} catch (error) {
-			span.setStatus({
-				code: SpanStatusCode.ERROR,
-				message: error instanceof Error ? error.message : 'Unknown error'
-			});
-			span.recordException(error instanceof Error ? error : new Error(String(error)));
-			throw error;
-		} finally {
-			span.end();
-		}
+		return tracer.startActiveSpan(name, (span) => {
+			try {
+				const result = fn(...args);
+				span.setStatus({ code: SpanStatusCode.OK });
+				return result;
+			} catch (error) {
+				span.setStatus({
+					code: SpanStatusCode.ERROR,
+					message: error instanceof Error ? error.message : 'Unknown error'
+				});
+				span.recordException(error instanceof Error ? error : new Error(String(error)));
+				throw error;
+			} finally {
+				span.end();
+			}
+		});
 	};
 
 	// Preserve original function name for stack traces
