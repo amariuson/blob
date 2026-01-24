@@ -19,7 +19,7 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "tsx scripts/migrate.ts",
 		"db:studio": "drizzle-kit studio",
-    "db:start": "docker compose up -d"
+		"db:start": "docker compose up -d"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -93,6 +93,7 @@
 		"svelte-easy-crop": "^5.0.0",
 		"svelte-toolbelt": "^0.10.6",
 		"sveltekit-rate-limiter": "^0.7.0",
+		"tsx": "^4.21.0",
 		"uuidv7": "^1.1.0",
 		"zod": "^4.3.6"
 	}
