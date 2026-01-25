@@ -1,0 +1,43 @@
+diff --git a/src/exports/vite/dev/index.js b/src/exports/vite/dev/index.js
+index 31c13c1ead8bc4f96da9b095d47c5dfaa2dca20f..a040af39d7ce3ff33d614c957ef9ed6350b8d59f 100644
+--- a/src/exports/vite/dev/index.js
++++ b/src/exports/vite/dev/index.js
+@@ -340,7 +340,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
+ 			if (
+ 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
+ 				file.startsWith(svelte_config.kit.files.params + path.sep) ||
+-				svelte_config.kit.moduleExtensions.some((ext) => file.endsWith(`.remote${ext}`)) ||
++				svelte_config.kit.moduleExtensions.some((ext) => file.endsWith(`.remote${ext}`) || (!file.startsWith('node_modules') && file.endsWith(`/remote/index${ext}`))) ||
+ 				// in contrast to server hooks, client hooks are written to the client manifest
+ 				// and therefore need rebuilding when they are added/removed
+ 				file.startsWith(svelte_config.kit.files.hooks.client)
+diff --git a/src/exports/vite/index.js b/src/exports/vite/index.js
+index 47116b4410f5a88914b7e139b27cdde4d6b60fcb..b8dc749edc0f2e845e8967b5aea1f301f23f98ec 100644
+--- a/src/exports/vite/index.js
++++ b/src/exports/vite/index.js
+@@ -586,6 +586,7 @@ async function kit({ svelte_config }) {
+ 				normalized === '$env/dynamic/private' ||
+ 				normalized === '$app/server' ||
+ 				normalized.startsWith('$lib/server/') ||
++        (is_internal && normalized.includes('/server')) ||
+ 				(is_internal && server_only_pattern.test(path.basename(id)));
+ 
+ 			if (is_server_only) {
+@@ -618,7 +619,7 @@ async function kit({ svelte_config }) {
+ 					chain.push((current = candidates[0]));
+ 
+ 					includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
+-						return current.endsWith(`.remote${ext}`);
++						return current.endsWith(`.remote${ext}`) || (!current.startsWith('node_modules') && current.endsWith(`/remote/index${ext}`));
+ 					});
+ 
+ 					if (entrypoints.has(current)) {
+@@ -689,7 +690,7 @@ async function kit({ svelte_config }) {
+ 
+ 		async transform(code, id, opts) {
+ 			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+-			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
++			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`) || (!normalized.startsWith('node_modules') && normalized.endsWith(`/remote/index${ext}`)))) {
+ 				return;
+ 			}
+ 

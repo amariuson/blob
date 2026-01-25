@@ -1,2 +1,5 @@
 onlyBuiltDependencies:
   - esbuild
+
+patchedDependencies:
+  '@sveltejs/kit@2.50.1': patches/@sveltejs__kit@2.50.1.patch
