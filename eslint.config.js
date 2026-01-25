@@ -7,7 +7,7 @@ import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import ts from 'typescript-eslint';
 import svelteConfig from './svelte.config.js';
-import features from './tools/eslint';
+import features from './tools/eslint/index.js';
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
