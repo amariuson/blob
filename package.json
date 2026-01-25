@@ -17,7 +17,7 @@
 		"test:e2e": "playwright test",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate": "tsx scripts/migrate.ts",
+		"db:migrate": "tsx tools/scripts/migrate.ts",
 		"db:studio": "drizzle-kit studio",
 		"db:start": "docker compose up -d"
 	},
@@ -78,7 +78,9 @@
 		"@opentelemetry/resources": "^2.5.0",
 		"@opentelemetry/sdk-node": "^0.211.0",
 		"@opentelemetry/semantic-conventions": "^1.39.0",
+		"@polar-sh/better-auth": "^1.6.4",
 		"@polar-sh/sdk": "^0.42.2",
+		"better-auth": "^1.4.17",
 		"better-svelte-email": "^1.4.0",
 		"date-fns": "^4.1.0",
 		"dotenv": "^17.2.3",
