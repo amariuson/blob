@@ -1,5 +1,5 @@
 <script>
-	import SignUp from '$features/auth/components/sign-up.svelte';
+	import { SignUp } from '$features/auth';
 </script>
 
 <SignUp />

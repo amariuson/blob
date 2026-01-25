@@ -1,8 +1,7 @@
-// Server-side exports (use in .server.ts files or +server.ts)
-export { createAuthHandle, createSetupHandle, createRedirectHandle } from './handles.server';
+// Client-safe public API
+// Export: remote functions, schemas, types, constants, components
+// Do NOT export: server-only code (use $features/auth/server)
 
-// Shared exports (can be used in client or server)
-export { ac, roles, permissions, roleDefinitions, assignableRoles } from './config/access-control';
-export type { PermissionMap, RoleDefinition, Resource, Actions } from './config/access-control';
-
-export type { Session, ActiveMember } from './auth.server';
+export { default as Onboarding } from './components/onboarding.svelte';
+export { default as SignUp } from './components/sign-up.svelte';
+export { default as SignIn } from './components/sign-in.svelte';

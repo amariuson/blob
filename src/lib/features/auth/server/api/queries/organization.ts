@@ -1,6 +1,6 @@
 import { logger } from '$services/logger';
 import { error } from '@sveltejs/kit';
-import { auth } from '../../auth.server';
+import { auth } from '../../auth';
 import { db } from '$lib/server/db';
 import { member } from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';

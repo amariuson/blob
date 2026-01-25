@@ -4,9 +4,10 @@ import { eq } from 'drizzle-orm';
 import * as schema from '$lib/server/db/schema';
 import { logger } from '$services/logger';
 import { z } from 'zod';
-import { getSession } from '$features/auth/api/queries/user';
 import { error } from '@sveltejs/kit';
-import type { Session } from '$features/auth/auth.server';
+
+// cross feature
+import { getSession, type Session } from '$features/auth/server';
 
 // ============================================================================
 // Schemas

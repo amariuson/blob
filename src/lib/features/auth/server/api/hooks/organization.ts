@@ -2,7 +2,7 @@ import { db } from '$lib/server/db';
 import { generateSlug, generateSlugSuffix } from '$lib/shared/utils';
 import { logger } from '$services/logger';
 import { eq } from 'drizzle-orm';
-import { auth } from '../../auth.server';
+import { auth } from '../../auth';
 import { auditLog, organization, user } from '$lib/server/db/schema';
 import { defaultEntitlements } from '$lib/shared/types/entitlements';
 import { polarClient } from '$services/polar';

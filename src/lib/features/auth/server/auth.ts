@@ -21,16 +21,16 @@ import {
 } from '$services/email';
 import { logger } from '$services/logger';
 import { isTestEnv } from '$lib/server/env.server';
-import { ac, roles } from './config/access-control';
-import { createSessionStorage } from './adapters/session-storage.server';
-import { createDatabaseHooks } from './hooks/database-hooks.server';
-import { createPolarPlugin } from './plugins/polar.server';
-import { validateInvitation } from './logic/validation';
-import { TEST_OTP } from './constants';
+import { ac, roles } from '../config/access-control';
+import { createSessionStorage } from './adapters/session-storage';
+import { createPolarPlugin } from './plugins/polar';
+import { validateInvitation } from '../logic/validation';
+import { TEST_OTP } from '../constants';
 import { initializeOrganization, recordOrgDeletion } from './api/hooks/organization';
 import { getActiveMemberOrNull } from './api/queries/user';
 import { validateRoleChange } from './api/queries/organization';
 import { clearMemberSessions } from './api/mutations/user';
+import { afterUserCreate, beforeUserCreate } from './api/hooks/database-hooks.server';
 
 export const auth = betterAuth({
 	secret: BETTER_AUTH_SECRET,
@@ -70,7 +70,14 @@ export const auth = betterAuth({
 		},
 		cookiePrefix: 'blob-app'
 	},
-	databaseHooks: createDatabaseHooks(),
+	databaseHooks: {
+		user: {
+			create: {
+				before: beforeUserCreate,
+				after: afterUserCreate
+			}
+		}
+	},
 	socialProviders: {
 		google: {
 			clientId: GOOGLE_CLIENT_ID,

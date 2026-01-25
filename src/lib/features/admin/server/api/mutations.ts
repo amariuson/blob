@@ -4,9 +4,11 @@ import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
 import type { AuditAction } from '$lib/server/db/schema';
 import { logger } from '$services/logger';
-import { auth } from '$features/auth/auth.server';
 import { getUserForImpersonation, guardSelfAction, requireSuperadmin } from './queries';
-import { getSession } from '$features/auth/api/queries/user';
+
+// cross feature
+import { auth } from '$features/auth/server';
+import { getSession } from '$features/auth/server';
 
 // ============================================================================
 // Audit Logging

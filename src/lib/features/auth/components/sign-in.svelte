@@ -1,7 +1,8 @@
 <script>
 	import { PUBLIC_STATIC_URL } from '$env/static/public';
 	import Button from '$lib/shared/components/ui/button/button.svelte';
-	import { SignInWithEmailForm, SignInWithGoogleForm } from './forms';
+	import SignInWithEmailForm from './forms/sign-in-with-email-form.svelte';
+	import SignInWithGoogleForm from './forms/sign-in-with-google-form.svelte';
 </script>
 
 <section class="flex min-h-screen px-4 py-16 md:py-32">

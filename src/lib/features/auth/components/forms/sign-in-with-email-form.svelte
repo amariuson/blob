@@ -8,10 +8,10 @@
 
 	import { cn } from '$lib/shared/utils';
 	import { tick } from 'svelte';
-	import { sendEmailOTPForm, signInWithEmailOTPForm } from '$features/auth/remote';
 	import { toast } from 'svelte-sonner';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
 	import { watch } from 'runed';
+	import { sendEmailOTPForm, signInWithEmailOTPForm } from '$features/auth/remote';
 
 	const id = $props.id();
 	let { class: className } = $props();

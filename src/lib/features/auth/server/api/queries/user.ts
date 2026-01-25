@@ -1,5 +1,5 @@
 import { getRequestEvent } from '$app/server';
-import { auth } from '../../auth.server';
+import { auth } from '../../auth';
 import { invariant } from '$lib/shared/utils';
 import { logger } from '$services/logger';
 import { db } from '$lib/server/db';

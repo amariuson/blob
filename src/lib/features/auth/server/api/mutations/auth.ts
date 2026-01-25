@@ -1,8 +1,8 @@
 import { resolve } from '$app/paths';
 import { getRequestEvent } from '$app/server';
-import { auth } from '$features/auth/auth.server';
 import { error, redirect } from '@sveltejs/kit';
 import z from 'zod';
+import { auth } from '../../auth';
 
 export const sendEmailOTPSchema = z.object({
 	email: z.email()

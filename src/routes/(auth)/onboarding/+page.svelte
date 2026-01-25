@@ -1,5 +1,5 @@
 <script>
-	import Onboarding from '$features/auth/components/onboarding.svelte';
+	import { Onboarding } from '$features/auth';
 </script>
 
 <Onboarding />

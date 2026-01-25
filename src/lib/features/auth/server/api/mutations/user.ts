@@ -5,8 +5,8 @@ import { redisClient } from '$services/redis';
 import { and, eq } from 'drizzle-orm';
 import { getAffectedSessions } from '../queries/user';
 import { getRequestEvent } from '$app/server';
-import { auth } from '$features/auth/auth.server';
 import { redirect } from '@sveltejs/kit';
+import { auth } from '../../auth';
 
 export async function signOutUser() {
 	const event = getRequestEvent();

@@ -1,4 +1,4 @@
-import { auth } from '../../auth.server';
+import { auth } from '../../auth';
 import { getRequestEvent } from '$app/server';
 
 // Sets the active organization for the current session.

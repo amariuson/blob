@@ -6,17 +6,17 @@ import {
 	signInWithEmailOTP,
 	signInWithEmailOTPSchema,
 	signInWithGoogle
-} from '../api/mutations/auth';
+} from '../server/api/mutations/auth';
 import {
 	acceptInvitationOnboarding,
 	createOrganizationOnboarding,
 	createOrgOnboardingSchema,
 	declineInvitationOnboarding,
 	invitationActionSchema
-} from '../api/mutations/onboarding';
-import { signOutUser } from '../api/mutations/user';
-import { getUserInvitations } from '../api/queries/user';
-import { getSession } from '../api/queries/user';
+} from '../server/api/mutations/onboarding';
+import { signOutUser } from '../server/api/mutations/user';
+import { getUserInvitations } from '../server/api/queries/user';
+import { getSession } from '../server/api/queries/user';
 import { APIError } from 'better-auth';
 import z from 'zod';
 
