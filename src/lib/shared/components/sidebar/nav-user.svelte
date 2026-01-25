@@ -9,9 +9,8 @@
 	import SparklesIcon from '@lucide/svelte/icons/sparkles';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
-	import { goto } from '$app/navigation';
 	import type { RemoteForm } from '@sveltejs/kit';
-	import { resolve } from '$app/paths';
+	import { formHandler } from '$lib/shared/form/form-handler.svelte';
 
 	let {
 		user,
@@ -106,12 +105,7 @@
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 				<DropdownMenu.Separator />
-				<form
-					{...signOutUserForm.enhance(async ({ submit }) => {
-						await submit();
-						goto(resolve('/'));
-					})}
-				>
+				<form {...formHandler(signOutUserForm)}>
 					<DropdownMenu.Item class="flex w-full">
 						{#snippet child({ props })}
 							<button {...props}>

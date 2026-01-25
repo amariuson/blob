@@ -1,0 +1,41 @@
+<script lang="ts">
+	import AppSidebar from '$lib/shared/components/sidebar/app-sidebar.svelte';
+	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
+	import { getSessionQuery, signOutUserForm } from '$features/auth/remote';
+	import ImpersonationBanner from '$features/admin/components/impersonation-banner.svelte';
+	import type { Snippet } from 'svelte';
+
+	let {
+		children
+	}: {
+		children: Snippet;
+	} = $props();
+
+	const session = $derived(await getSessionQuery());
+
+	const user = $derived({
+		name: session.user.name,
+		email: session.user.email,
+		avatar: session.user.image ?? ''
+	});
+
+	const isAdmin = $derived(session.user.role === 'superadmin');
+</script>
+
+<ImpersonationBanner>
+	<Sidebar.Provider>
+		<AppSidebar {user} {signOutUserForm} {isAdmin} />
+		<Sidebar.Inset>
+			<header
+				class="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-2 group-data-[active=true]/banner:static"
+			>
+				<div class="flex h-8 items-center gap-2 px-4">
+					<Sidebar.Trigger class="-ml-1" />
+				</div>
+			</header>
+			<div class="flex flex-1 flex-col gap-4 p-4 pt-0">
+				{@render children()}
+			</div>
+		</Sidebar.Inset>
+	</Sidebar.Provider>
+</ImpersonationBanner>

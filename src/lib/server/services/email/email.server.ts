@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { instrumentResend } from '@kubiks/otel-resend';
 import { RESEND_API_KEY, RESEND_SEND_EMAIL_ADDRESS } from '$env/static/private';
-import { logger } from '$lib/server/services/logger';
+import { logger } from '$services/logger';
 import { isTestEnv } from '$lib/server/env.server';
 
 const resend = instrumentResend(new Resend(RESEND_API_KEY));
