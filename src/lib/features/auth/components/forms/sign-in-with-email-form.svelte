@@ -24,12 +24,8 @@
 
 	const isPending = $derived(Boolean(sendEmailOTPForm.pending || signInWithEmailOTPForm.pending));
 
-	$effect(() => {
-		codeSent;
-		showErrors = false;
-	});
-
 	const goBackFromOTPInput = () => {
+		showErrors = false;
 		codeSent = false;
 		otpAttempt = 0;
 		otp = '';
@@ -107,6 +103,7 @@
 			class="space-y-6"
 			{...formHandler(sendEmailOTPForm, {
 				onSuccess({ inputData }) {
+					showErrors = false;
 					email = inputData.email;
 					codeSent = true;
 					focusOtp();
