@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Text, Heading } from 'better-svelte-email';
+	import { Heading,Text } from 'better-svelte-email';
+
 	import BaseLayout from '../components/BaseLayout.svelte';
 
 	let {

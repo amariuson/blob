@@ -1,18 +1,13 @@
-import { randomInt } from 'node:crypto';
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { organization } from 'better-auth/plugins';
-import { db } from '$lib/server/db';
-import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
-import { admin } from 'better-auth/plugins';
-import { emailOTP } from 'better-auth/plugins';
 import {
-	BETTER_AUTH_URL,
 	BETTER_AUTH_SECRET,
+	BETTER_AUTH_URL,
 	GOOGLE_CLIENT_ID,
 	GOOGLE_CLIENT_SECRET
 } from '$env/static/private';
+
+import { db } from '$lib/server/db';
+import { isTestEnv } from '$lib/server/env.server';
 import {
 	sendMemberRemovedEmail,
 	sendOrganizationInvitationEmail,
@@ -20,17 +15,25 @@ import {
 	sendRoleChangedEmail
 } from '$services/email';
 import { logger } from '$services/logger';
-import { isTestEnv } from '$lib/server/env.server';
+
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { organization } from 'better-auth/plugins';
+import { admin } from 'better-auth/plugins';
+import { emailOTP } from 'better-auth/plugins';
+import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { randomInt } from 'node:crypto';
+
 import { ac, roles } from '../config/access-control';
-import { createSessionStorage } from './adapters/session-storage';
-import { createPolarPlugin } from './plugins/polar';
-import { validateInvitation } from '../logic/validation';
 import { TEST_OTP } from '../constants';
-import { initializeOrganization, recordOrgDeletion } from './api/hooks/organization';
-import { getActiveMemberOrNull } from './api/queries/user';
-import { validateRoleChange } from './api/queries/organization';
-import { clearMemberSessions } from './api/mutations/user';
+import { validateInvitation } from '../logic/validation';
+import { createSessionStorage } from './adapters/session-storage';
 import { afterUserCreate, beforeUserCreate } from './api/hooks/database-hooks.server';
+import { initializeOrganization, recordOrgDeletion } from './api/hooks/organization';
+import { clearMemberSessions } from './api/mutations/user';
+import { validateRoleChange } from './api/queries/organization';
+import { getActiveMemberOrNull } from './api/queries/user';
+import { createPolarPlugin } from './plugins/polar';
 
 export const auth = betterAuth({
 	secret: BETTER_AUTH_SECRET,

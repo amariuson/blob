@@ -1,10 +1,13 @@
 <script lang="ts">
-	import { Button } from '$lib/shared/components/ui/button/index.js';
-	import { stopImpersonationForm, getImpersonationStatusQuery } from '../remote';
-	import Loader from '@lucide/svelte/icons/loader';
 	import type { Snippet } from 'svelte';
-	import { ElementSize } from 'runed';
+
+	import { Button } from '$lib/shared/components/ui/button/index.js';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+
+	import { ElementSize } from 'runed';
+	import Loader from '@lucide/svelte/icons/loader';
+
+	import { getImpersonationStatusQuery,stopImpersonationForm } from '../remote';
 
 	let { children }: { children?: Snippet } = $props();
 

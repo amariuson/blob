@@ -1,5 +1,7 @@
-import { uuidv7 } from 'uuidv7';
 import type { Handle } from '@sveltejs/kit';
+
+import { uuidv7 } from 'uuidv7';
+
 import { getSessionOrNull } from '../api/queries/user';
 
 /**

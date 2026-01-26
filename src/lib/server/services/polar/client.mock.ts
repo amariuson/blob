@@ -1,7 +1,9 @@
-import type { CustomerState } from '@polar-sh/sdk/models/components/customerstate.js';
-import type { AddressInput } from '@polar-sh/sdk/models/components/addressinput.js';
-import type { PolarAdapter, PolarCustomer } from './adapter';
 import { ORIGIN } from '$env/static/private';
+
+import type { AddressInput } from '@polar-sh/sdk/models/components/addressinput.js';
+import type { CustomerState } from '@polar-sh/sdk/models/components/customerstate.js';
+
+import type { PolarAdapter, PolarCustomer } from './adapter';
 
 /**
  * Creates a mock CustomerState with an active Pro subscription.

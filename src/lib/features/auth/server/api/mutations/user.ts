@@ -1,12 +1,15 @@
+import { redirect } from '@sveltejs/kit';
+import { getRequestEvent } from '$app/server';
+
 import { db } from '$lib/server/db';
 import { session } from '$lib/server/db/schema';
 import { logger } from '$services/logger';
 import { redisClient } from '$services/redis';
+
 import { and, eq } from 'drizzle-orm';
-import { getAffectedSessions } from '../queries/user';
-import { getRequestEvent } from '$app/server';
-import { redirect } from '@sveltejs/kit';
+
 import { auth } from '../../auth';
+import { getAffectedSessions } from '../queries/user';
 
 export async function signOutUser() {
 	const event = getRequestEvent();

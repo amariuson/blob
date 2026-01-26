@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { PUBLIC_STATIC_URL } from '$env/static/public';
+
 	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
 </script>
 

@@ -1,8 +1,9 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
+
 	import { Separator } from '$lib/shared/components/ui/separator/index.js';
 	import { cn, type WithElementRef } from '$lib/shared/utils.js';
-	import type { HTMLAttributes } from 'svelte/elements';
-	import type { Snippet } from 'svelte';
 
 	let {
 		ref = $bindable(null),

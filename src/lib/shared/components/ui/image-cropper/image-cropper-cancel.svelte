@@ -1,8 +1,9 @@
 <script lang="ts">
+	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+
+	import { useImageCropperCancel } from './image-cropper.svelte.js';
 	import { type ButtonElementProps } from './image-cropper-button.svelte';
 	import Button from './image-cropper-button.svelte';
-	import { useImageCropperCancel } from './image-cropper.svelte.js';
-	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 
 	let {
 		ref = $bindable(null),

@@ -1,17 +1,17 @@
 import { relations, sql } from 'drizzle-orm';
 import {
+	boolean,
+	index,
+	integer,
+	jsonb,
+	pgEnum,
 	pgTable,
 	text,
 	timestamp,
-	boolean,
-	index,
 	uniqueIndex,
-	uuid,
-	jsonb,
-	pgEnum,
-	integer
-} from 'drizzle-orm/pg-core';
-import { uuidv7, entitlementsJsonb } from './utils';
+	uuid} from 'drizzle-orm/pg-core';
+
+import { entitlementsJsonb,uuidv7 } from './utils';
 
 export const user = pgTable('user', {
 	id: uuidv7('id').primaryKey(),

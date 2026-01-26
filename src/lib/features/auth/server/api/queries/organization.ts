@@ -1,10 +1,13 @@
-import { logger } from '$services/logger';
 import { error } from '@sveltejs/kit';
-import { auth } from '../../auth';
+import { getRequestEvent } from '$app/server';
+
 import { db } from '$lib/server/db';
 import { member } from '$lib/server/db/schema';
+import { logger } from '$services/logger';
+
 import { and, eq } from 'drizzle-orm';
-import { getRequestEvent } from '$app/server';
+
+import { auth } from '../../auth';
 
 export async function listUserInvitations(email: string) {
 	logger.debug({ email }, 'Fetching pending invitations');

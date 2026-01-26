@@ -1,10 +1,10 @@
 import { sendEmail } from './email.server';
 import { renderEmail } from './renderer.server';
-import OtpVerification from './templates/OtpVerification.svelte';
-import OrganizationInvitation from './templates/OrganizationInvitation.svelte';
-import WelcomeEmail from './templates/WelcomeEmail.svelte';
 import MemberRemoved from './templates/MemberRemoved.svelte';
+import OrganizationInvitation from './templates/OrganizationInvitation.svelte';
+import OtpVerification from './templates/OtpVerification.svelte';
 import RoleChanged from './templates/RoleChanged.svelte';
+import WelcomeEmail from './templates/WelcomeEmail.svelte';
 import type { OtpType } from './types';
 
 const otpSubjects: Record<OtpType, string> = {

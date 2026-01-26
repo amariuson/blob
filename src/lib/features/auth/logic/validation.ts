@@ -3,6 +3,7 @@
  */
 
 import { error } from '@sveltejs/kit';
+
 import { logger } from '$services/logger';
 
 /**

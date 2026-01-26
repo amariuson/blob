@@ -1,13 +1,15 @@
 <script lang="ts">
-	import Button from '$lib/shared/components/ui/button/button.svelte';
-	import Label from '$lib/shared/components/ui/label/label.svelte';
-	import * as InputOTP from '$lib/shared/components/ui/input-otp/index';
-	import Spinner from '$lib/shared/components/ui/spinner/spinner.svelte';
-	import { REGEXP_ONLY_DIGITS } from 'bits-ui';
-
 	import { onMount, tick } from 'svelte';
 	import { toast } from 'svelte-sonner';
+
+	import Button from '$lib/shared/components/ui/button/button.svelte';
+	import * as InputOTP from '$lib/shared/components/ui/input-otp/index';
+	import Label from '$lib/shared/components/ui/label/label.svelte';
+	import Spinner from '$lib/shared/components/ui/spinner/spinner.svelte';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+
+	import { REGEXP_ONLY_DIGITS } from 'bits-ui';
+
 	import { signInWithEmailOTPForm } from '../../remote';
 
 	type Props = {

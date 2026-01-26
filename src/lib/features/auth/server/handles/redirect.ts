@@ -1,7 +1,9 @@
-import { redirect, type Handle } from '@sveltejs/kit';
+import { type Handle,redirect } from '@sveltejs/kit';
+
 import { logger } from '$services/logger';
-import { listUserOrganizations } from '../api/queries/organization';
+
 import { setActiveOrganization } from '../api/mutations/organization';
+import { listUserOrganizations } from '../api/queries/organization';
 
 /**
  * Enforces auth redirects and auto-selects organization.

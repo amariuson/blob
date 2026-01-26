@@ -1,6 +1,7 @@
 <script lang="ts" module>
-	import type { WithChildren, WithoutChildren } from 'bits-ui';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
+
+	import type { WithChildren, WithoutChildren } from 'bits-ui';
 	import type { VariantProps } from 'tailwind-variants';
 
 	export type ButtonVariant = VariantProps<typeof buttonVariants>['variant'];
@@ -37,7 +38,9 @@
 
 <script lang="ts">
 	import { cn } from '$lib/shared/utils.js';
+
 	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
+
 	import { buttonVariants } from '../button/index.js';
 
 	let {

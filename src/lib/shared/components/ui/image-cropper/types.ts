@@ -1,3 +1,7 @@
+import type { Snippet } from 'svelte';
+import type { HTMLAttributes, HTMLInputAttributes } from 'svelte/elements';
+import type { CropperProps } from 'svelte-easy-crop';
+
 import type {
 	AvatarRootProps,
 	DialogContentProps,
@@ -5,9 +9,6 @@ import type {
 	WithoutChild,
 	WithoutChildren
 } from 'bits-ui';
-import type { Snippet } from 'svelte';
-import type { CropperProps } from 'svelte-easy-crop';
-import type { HTMLAttributes, HTMLInputAttributes } from 'svelte/elements';
 
 export type ImageCropperRootPropsWithoutHTML = WithChildren<{
 	id?: string;

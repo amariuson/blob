@@ -5,9 +5,10 @@
  * Falls back gracefully to DB when Redis is unavailable.
  */
 
-import type { SecondaryStorage } from 'better-auth';
-import { redisClient } from '$services/redis';
 import { logger } from '$services/logger';
+import { redisClient } from '$services/redis';
+
+import type { SecondaryStorage } from 'better-auth';
 
 const SESSION_PREFIX = 'session:';
 const MAX_KEY_LENGTH = 256;

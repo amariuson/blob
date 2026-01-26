@@ -1,10 +1,13 @@
+import { error, redirect } from '@sveltejs/kit';
 import { getRequestEvent } from '$app/server';
-import z from 'zod';
-import { getSession } from '../queries/user';
+
 import { generateSlug } from '$lib/shared/utils';
 import { logger } from '$services/logger';
-import { error, redirect } from '@sveltejs/kit';
+
+import z from 'zod';
+
 import { auth } from '../../auth';
+import { getSession } from '../queries/user';
 
 export const createOrgOnboardingSchema = z.object({
 	name: z.string().min(1, 'Organization name is required').max(100, 'Name is too long')

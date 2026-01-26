@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/shared/utils.js';
+
 	import { Command as CommandPrimitive } from 'bits-ui';
 
 	export type CommandRootApi = CommandPrimitive.Root;

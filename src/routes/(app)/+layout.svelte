@@ -1,9 +1,10 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
+	import { ImpersonationBanner } from '$features/admin';
+	import { getSessionQuery, signOutUserForm } from '$features/auth/remote';
 	import AppSidebar from '$lib/shared/components/sidebar/app-sidebar.svelte';
 	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
-	import { getSessionQuery, signOutUserForm } from '$features/auth/remote';
-	import { ImpersonationBanner } from '$features/admin';
-	import type { Snippet } from 'svelte';
 
 	let {
 		children

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { HTMLOptgroupAttributes } from 'svelte/elements';
+
 	import type { WithElementRef } from '$lib/shared/utils.js';
 
 	let {

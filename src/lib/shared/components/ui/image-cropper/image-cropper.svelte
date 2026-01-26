@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { box } from 'svelte-toolbelt';
+
+	import { useId } from 'bits-ui';
+
 	import { useImageCropperRoot } from './image-cropper.svelte.js';
 	import type { ImageCropperRootProps } from './types';
-	import { onDestroy } from 'svelte';
-	import { useId } from 'bits-ui';
 
 	let {
 		id = useId(),

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Dialog from '$lib/shared/components/ui/dialog/index.js';
 	import { cn } from '$lib/shared/utils.js';
+
 	import { useImageCropperDialog } from './image-cropper.svelte.js';
 	import type { ImageCropperDialogProps } from './types';
 

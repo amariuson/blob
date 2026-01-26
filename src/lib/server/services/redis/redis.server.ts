@@ -1,7 +1,10 @@
-import Redis from 'ioredis';
-import { logger } from '../logger';
 import { REDIS_URL } from '$env/static/private';
+
 import { onShutdown } from '$services/lifecycle';
+
+import Redis from 'ioredis';
+
+import { logger } from '../logger';
 
 if (!REDIS_URL) {
 	throw new Error('REDIS_URL environment variable is required');

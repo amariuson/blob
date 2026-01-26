@@ -4,6 +4,7 @@
 	import Label from '$lib/shared/components/ui/label/label.svelte';
 	import Spinner from '$lib/shared/components/ui/spinner/spinner.svelte';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+
 	import { sendEmailOTPForm } from '../../remote';
 
 	type Props = {

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { PUBLIC_STATIC_URL } from '$env/static/public';
 	import type { Snippet } from 'svelte';
+	import { PUBLIC_STATIC_URL } from '$env/static/public';
 
 	type Props = {
 		heading: string;

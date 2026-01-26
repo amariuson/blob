@@ -1,7 +1,8 @@
 <script>
-	import { signInWithGoogleForm } from '../../remote';
 	import { Button } from '$lib/shared/components/ui/button';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+
+	import { signInWithGoogleForm } from '../../remote';
 </script>
 
 <form {...formHandler(signInWithGoogleForm)}>

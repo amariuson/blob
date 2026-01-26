@@ -1,11 +1,12 @@
 import { db } from '$lib/server/db';
 import { organization } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
-import { logger } from '$services/logger';
-import { setSpanAttributes, addSpanEvent } from '$services/tracing';
 import type { Entitlements } from '$lib/shared/types/entitlements';
-import type { WebhookCustomerUpdatedPayload } from '@polar-sh/sdk/models/components/webhookcustomerupdatedpayload.js';
+import { logger } from '$services/logger';
+import { addSpanEvent,setSpanAttributes } from '$services/tracing';
+
+import { eq } from 'drizzle-orm';
 import type { WebhookCustomerStateChangedPayload } from '@polar-sh/sdk/models/components/webhookcustomerstatechangedpayload.js';
+import type { WebhookCustomerUpdatedPayload } from '@polar-sh/sdk/models/components/webhookcustomerupdatedpayload.js';
 
 function validateExternalId(externalId: string | null): asserts externalId {
 	if (!externalId) {

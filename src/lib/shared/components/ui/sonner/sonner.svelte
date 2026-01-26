@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Loader2Icon from '@lucide/svelte/icons/loader-2';
-
 	import { Toaster as Sonner, type ToasterProps as SonnerProps } from 'svelte-sonner';
+
 	import { mode } from 'mode-watcher';
+	import Loader2Icon from '@lucide/svelte/icons/loader-2';
 
 	let { ...restProps }: SonnerProps = $props();
 </script>

@@ -1,7 +1,9 @@
+import { error, redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
 import { getRequestEvent } from '$app/server';
-import { error, redirect } from '@sveltejs/kit';
+
 import z from 'zod';
+
 import { auth } from '../../auth';
 
 export const sendEmailOTPSchema = z.object({

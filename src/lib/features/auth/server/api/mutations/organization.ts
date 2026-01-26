@@ -1,5 +1,6 @@
-import { auth } from '../../auth';
 import { getRequestEvent } from '$app/server';
+
+import { auth } from '../../auth';
 
 // Sets the active organization for the current session.
 export async function setActiveOrganization(organizationId: string) {

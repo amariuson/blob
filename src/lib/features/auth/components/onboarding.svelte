@@ -4,12 +4,12 @@
 	import { Input } from '$lib/shared/components/ui/input/index.js';
 	import { Label } from '$lib/shared/components/ui/label/index.js';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+
 	import {
-		getUserInvitationsQuery,
-		createOrgOnboardingForm,
 		acceptInvitationForm,
-		declineInvitationForm
-	} from '../remote';
+		createOrgOnboardingForm,
+		declineInvitationForm,
+		getUserInvitationsQuery	} from '../remote';
 
 	const invitations = await getUserInvitationsQuery();
 </script>

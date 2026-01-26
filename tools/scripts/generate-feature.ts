@@ -9,7 +9,7 @@
  * Safe to run on existing features - only adds missing files/folders.
  */
 
-import { mkdir, writeFile, access } from 'fs/promises';
+import { access,mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
 
 const FEATURES_DIR = 'src/lib/features';

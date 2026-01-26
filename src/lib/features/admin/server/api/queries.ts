@@ -1,13 +1,14 @@
-import { db } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import * as schema from '$lib/server/db/schema';
-import { logger } from '$services/logger';
-import { z } from 'zod';
 import { error } from '@sveltejs/kit';
 
+import type { Session } from '$features/auth';
 // cross feature
 import { getSession, getSessionOrNull } from '$features/auth/server';
-import type { Session } from '$features/auth';
+import { db } from '$lib/server/db';
+import * as schema from '$lib/server/db/schema';
+import { logger } from '$services/logger';
+
+import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 
 // ============================================================================
 // Schemas

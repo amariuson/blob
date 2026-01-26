@@ -1,16 +1,18 @@
 <script lang="ts">
+	import type { RemoteForm } from '@sveltejs/kit';
+
 	import * as Avatar from '$lib/shared/components/ui/avatar/index.js';
 	import * as DropdownMenu from '$lib/shared/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
 	import { useSidebar } from '$lib/shared/components/ui/sidebar/index.js';
+	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+
 	import BadgeCheckIcon from '@lucide/svelte/icons/badge-check';
 	import BellIcon from '@lucide/svelte/icons/bell';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
-	import SparklesIcon from '@lucide/svelte/icons/sparkles';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
-	import type { RemoteForm } from '@sveltejs/kit';
-	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+	import SparklesIcon from '@lucide/svelte/icons/sparkles';
 
 	let {
 		user,

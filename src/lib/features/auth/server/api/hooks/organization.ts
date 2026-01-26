@@ -1,12 +1,14 @@
 import { db } from '$lib/server/db';
+import { auditLog, organization, user } from '$lib/server/db/schema';
+import { isE2ETestMode } from '$lib/server/env.server';
+import { defaultEntitlements } from '$lib/shared/types/entitlements';
 import { generateSlug, generateSlugSuffix } from '$lib/shared/utils';
 import { logger } from '$services/logger';
-import { eq } from 'drizzle-orm';
-import { auth } from '../../auth';
-import { auditLog, organization, user } from '$lib/server/db/schema';
-import { defaultEntitlements } from '$lib/shared/types/entitlements';
 import { polarClient } from '$services/polar';
-import { isE2ETestMode } from '$lib/server/env.server';
+
+import { eq } from 'drizzle-orm';
+
+import { auth } from '../../auth';
 
 export async function autoCreateOrganization(userId: string, userName: string): Promise<boolean> {
 	const orgName = `${userName}'s Organization`;

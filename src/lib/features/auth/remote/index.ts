@@ -1,5 +1,9 @@
-import { form, query } from '$app/server';
 import { error, invalid } from '@sveltejs/kit';
+import { form, query } from '$app/server';
+
+import { APIError } from 'better-auth';
+import z from 'zod';
+
 import {
 	sendEmailOTP,
 	sendEmailOTPSchema,
@@ -17,8 +21,6 @@ import {
 import { signOutUser } from '../server/api/mutations/user';
 import { getUserInvitations } from '../server/api/queries/user';
 import { getSession } from '../server/api/queries/user';
-import { APIError } from 'better-auth';
-import z from 'zod';
 
 export const signOutUserForm = form(async () => {
 	await signOutUser();

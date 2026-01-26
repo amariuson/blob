@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { PUBLIC_STATIC_URL } from '$env/static/public';
+
 	import {
-		Html,
-		Head,
 		Body,
 		Container,
-		Section,
-		Text,
+		Head,
 		Hr,
+		Html,
 		Img,
-		Preview
-	} from 'better-svelte-email';
+		Preview,
+		Section,
+		Text	} from 'better-svelte-email';
 
 	let {
 		preview = '',
