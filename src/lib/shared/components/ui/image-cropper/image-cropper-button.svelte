@@ -70,19 +70,23 @@
 	tabindex={href && disabled ? -1 : tabindex}
 	class={cn(buttonVariants({ variant, size }), className)}
 	bind:this={ref}
-	onclick={async (
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		e: any
-	) => {
-		onclick?.(e);
+	onclick={async (e: MouseEvent) => {
+		// Call onclick with appropriate type based on element
+		if (href) {
+			(onclick as AnchorElementProps['onclick'])?.(
+				e as MouseEvent & { currentTarget: EventTarget & HTMLAnchorElement }
+			);
+		} else {
+			(onclick as ButtonElementProps['onclick'])?.(
+				e as MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }
+			);
+		}
 
 		if (type === undefined) return;
 
 		if (onClickPromise) {
 			loading = true;
-
-			await onClickPromise(e);
-
+			await onClickPromise(e as MouseEvent & { currentTarget: EventTarget & HTMLButtonElement });
 			loading = false;
 		}
 	}}
