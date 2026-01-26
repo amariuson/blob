@@ -10,7 +10,6 @@
 	import { tick } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
-	import { watch } from 'runed';
 	import { sendEmailOTPForm, signInWithEmailOTPForm } from '../../remote';
 
 	const id = $props.id();
@@ -25,12 +24,10 @@
 
 	const isPending = $derived(Boolean(sendEmailOTPForm.pending || signInWithEmailOTPForm.pending));
 
-	watch(
-		() => codeSent,
-		() => {
-			showErrors = false;
-		}
-	);
+	$effect(() => {
+		codeSent;
+		showErrors = false;
+	});
 
 	const goBackFromOTPInput = () => {
 		codeSent = false;
