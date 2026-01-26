@@ -18,4 +18,5 @@ export {
 	Textarea as InputGroupTextarea,
 	Root,
 	Text,
-	Textarea};
+	Textarea
+};

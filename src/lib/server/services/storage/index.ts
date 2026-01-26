@@ -10,4 +10,5 @@ export {
 	isAllowedImageType,
 	isR2Url,
 	StorageError,
-	validateFileSize} from './storage.server';
+	validateFileSize
+} from './storage.server';

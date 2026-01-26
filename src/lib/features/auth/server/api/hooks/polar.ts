@@ -2,7 +2,7 @@ import { db } from '$lib/server/db';
 import { organization } from '$lib/server/db/schema';
 import type { Entitlements } from '$lib/shared/types/entitlements';
 import { logger } from '$services/logger';
-import { addSpanEvent,setSpanAttributes } from '$services/tracing';
+import { addSpanEvent, setSpanAttributes } from '$services/tracing';
 
 import { eq } from 'drizzle-orm';
 import type { WebhookCustomerStateChangedPayload } from '@polar-sh/sdk/models/components/webhookcustomerstatechangedpayload.js';

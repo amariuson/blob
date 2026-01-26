@@ -1,7 +1,7 @@
 import type { Entitlements } from '$lib/shared/types/entitlements';
 
 import { sql } from 'drizzle-orm';
-import { customType,uuid } from 'drizzle-orm/pg-core';
+import { customType, uuid } from 'drizzle-orm/pg-core';
 
 export const uuidv7 = (name: string) => uuid(name).default(sql`uuidv7()`);
 

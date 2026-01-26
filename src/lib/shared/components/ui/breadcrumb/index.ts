@@ -21,4 +21,5 @@ export {
 	List,
 	Page,
 	Root,
-	Separator};
+	Separator
+};

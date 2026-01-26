@@ -9,4 +9,5 @@ export {
 	Trigger as CollapsibleTrigger,
 	Content,
 	Root,
-	Trigger};
+	Trigger
+};

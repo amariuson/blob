@@ -10,7 +10,8 @@
 		Img,
 		Preview,
 		Section,
-		Text	} from 'better-svelte-email';
+		Text
+	} from 'better-svelte-email';
 
 	let {
 		preview = '',

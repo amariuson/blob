@@ -9,9 +9,10 @@ import {
 	text,
 	timestamp,
 	uniqueIndex,
-	uuid} from 'drizzle-orm/pg-core';
+	uuid
+} from 'drizzle-orm/pg-core';
 
-import { entitlementsJsonb,uuidv7 } from './utils';
+import { entitlementsJsonb, uuidv7 } from './utils';
 
 export const user = pgTable('user', {
 	id: uuidv7('id').primaryKey(),

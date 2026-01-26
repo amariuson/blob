@@ -27,4 +27,5 @@ export {
 	Previous as PaginationPrevious,
 	PrevButton, //old
 	Previous,
-	Root};
+	Root
+};

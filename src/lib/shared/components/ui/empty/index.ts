@@ -18,4 +18,5 @@ export {
 	Header,
 	Media,
 	Root,
-	Title};
+	Title
+};

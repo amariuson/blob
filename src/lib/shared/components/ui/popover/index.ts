@@ -15,4 +15,5 @@ export {
 	Trigger as PopoverTrigger,
 	Portal,
 	Root,
-	Trigger};
+	Trigger
+};

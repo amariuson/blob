@@ -1,5 +1,5 @@
 <script>
-	import { Auth,Layout } from '$features/auth';
+	import { Auth, Layout } from '$features/auth';
 	import { Button } from '$lib/shared/components/ui/button';
 </script>
 

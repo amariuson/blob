@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonVariants,type Props } from '$lib/shared/components/ui/button/index.js';
+	import { buttonVariants, type Props } from '$lib/shared/components/ui/button/index.js';
 	import { cn } from '$lib/shared/utils.js';
 
 	import { Pagination as PaginationPrimitive } from 'bits-ui';

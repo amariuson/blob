@@ -30,4 +30,5 @@ export {
 	Media,
 	Root,
 	Separator,
-	Title};
+	Title
+};

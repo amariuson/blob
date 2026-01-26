@@ -12,7 +12,7 @@ import type { RequestContext } from '$lib/shared/types';
 
 import type { TransportSingleOptions } from 'pino';
 import pino from 'pino';
-import { context as otelContext,trace } from '@opentelemetry/api';
+import { context as otelContext, trace } from '@opentelemetry/api';
 
 function buildTransport(): TransportSingleOptions | undefined {
 	if (dev) {

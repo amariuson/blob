@@ -5,4 +5,4 @@
 export { default as Auth } from './components/auth.svelte';
 export { default as Layout } from './components/layout.svelte';
 export { default as Onboarding } from './components/onboarding.svelte';
-export type { ActiveMember,Session } from './server/auth';
+export type { ActiveMember, Session } from './server/auth';

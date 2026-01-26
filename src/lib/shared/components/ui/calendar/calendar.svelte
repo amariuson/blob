@@ -4,7 +4,7 @@
 	import { cn, type WithoutChildrenOrChild } from '$lib/shared/utils.js';
 
 	import { Calendar as CalendarPrimitive } from 'bits-ui';
-	import { type DateValue,isEqualMonth } from '@internationalized/date';
+	import { type DateValue, isEqualMonth } from '@internationalized/date';
 
 	import type { ButtonVariant } from '../button/button.svelte';
 	import * as Calendar from './index.js';

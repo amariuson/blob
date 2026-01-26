@@ -8,4 +8,5 @@ export {
 	Option as NativeSelectOption,
 	OptGroup,
 	Option,
-	Root};
+	Root
+};

@@ -11,4 +11,5 @@ export {
 	Slot as InputOTPSlot,
 	Root,
 	Separator,
-	Slot};
+	Slot
+};

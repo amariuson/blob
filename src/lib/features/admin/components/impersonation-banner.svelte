@@ -7,7 +7,7 @@
 	import { ElementSize } from 'runed';
 	import Loader from '@lucide/svelte/icons/loader';
 
-	import { getImpersonationStatusQuery,stopImpersonationForm } from '../remote';
+	import { getImpersonationStatusQuery, stopImpersonationForm } from '../remote';
 
 	let { children }: { children?: Snippet } = $props();
 

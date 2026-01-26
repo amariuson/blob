@@ -8,6 +8,6 @@ import Preview from './image-cropper-preview.svelte';
 import UploadTrigger from './image-cropper-upload-trigger.svelte';
 import { getFileFromUrl } from './utils';
 
-export { Cancel, Controls, Crop, Cropper, Dialog, getFileFromUrl,Preview, Root, UploadTrigger };
+export { Cancel, Controls, Crop, Cropper, Dialog, getFileFromUrl, Preview, Root, UploadTrigger };
 
 export type * from './types';

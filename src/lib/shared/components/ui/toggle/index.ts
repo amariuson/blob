@@ -3,7 +3,8 @@ export {
 	type ToggleSize,
 	type ToggleVariant,
 	type ToggleVariants,
-	toggleVariants} from './toggle.svelte';
+	toggleVariants
+} from './toggle.svelte';
 
 export {
 	Root,

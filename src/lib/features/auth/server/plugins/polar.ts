@@ -4,7 +4,7 @@ import { polarSdk as polarClient } from '$services/polar';
 
 import { polar, webhooks } from '@polar-sh/better-auth';
 
-import { handleCustomerStateChanged,handleCustomerUpdated } from '../api/hooks/polar';
+import { handleCustomerStateChanged, handleCustomerUpdated } from '../api/hooks/polar';
 
 /**
  * Creates the Polar plugin with webhook handlers for customer and entitlement sync.

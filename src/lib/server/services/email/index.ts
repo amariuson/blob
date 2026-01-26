@@ -4,5 +4,6 @@ export {
 	sendOrganizationInvitationEmail,
 	sendOtpVerificationEmail,
 	sendRoleChangedEmail,
-	sendWelcomeEmail} from './emails.server';
+	sendWelcomeEmail
+} from './emails.server';
 export { renderEmail } from './renderer.server';

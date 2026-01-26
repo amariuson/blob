@@ -6,4 +6,5 @@ export {
 	//
 	Root as Kbd,
 	Group as KbdGroup,
-	Root};
+	Root
+};

@@ -9,4 +9,5 @@ export {
 	Text as ButtonGroupText,
 	Root,
 	Separator,
-	Text};
+	Text
+};

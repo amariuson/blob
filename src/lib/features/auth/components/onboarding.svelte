@@ -9,7 +9,8 @@
 		acceptInvitationForm,
 		createOrgOnboardingForm,
 		declineInvitationForm,
-		getUserInvitationsQuery	} from '../remote';
+		getUserInvitationsQuery
+	} from '../remote';
 
 	const invitations = await getUserInvitationsQuery();
 </script>

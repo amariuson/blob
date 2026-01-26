@@ -12,4 +12,5 @@ export {
 	Content,
 	Item,
 	Root,
-	Trigger};
+	Trigger
+};

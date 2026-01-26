@@ -12,4 +12,5 @@ export {
 	Content as TabsContent,
 	List as TabsList,
 	Trigger as TabsTrigger,
-	Trigger};
+	Trigger
+};

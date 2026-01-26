@@ -36,4 +36,5 @@ export {
 	PrevButton,
 	//
 	Root as RangeCalendar,
-	YearSelect};
+	YearSelect
+};

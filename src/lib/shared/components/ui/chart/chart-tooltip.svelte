@@ -6,7 +6,7 @@
 
 	import { getTooltipContext, Tooltip as TooltipPrimitive } from 'layerchart';
 
-	import { getPayloadConfigFromPayload, type TooltipPayload,useChart } from './chart-utils.js';
+	import { getPayloadConfigFromPayload, type TooltipPayload, useChart } from './chart-utils.js';
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	function defaultFormatter(value: any) {

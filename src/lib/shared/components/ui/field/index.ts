@@ -29,4 +29,5 @@ export {
 	Legend,
 	Separator,
 	Set,
-	Title};
+	Title
+};

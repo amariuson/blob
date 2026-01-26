@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
 
-import { type ClassValue,clsx } from 'clsx';
+import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { uuidv7 } from 'uuidv7';
 

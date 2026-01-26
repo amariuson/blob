@@ -5,7 +5,7 @@
 	import { cn, type WithoutChildrenOrChild } from '$lib/shared/utils.js';
 
 	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui';
-	import { type DateValue,isEqualMonth } from '@internationalized/date';
+	import { type DateValue, isEqualMonth } from '@internationalized/date';
 
 	import * as RangeCalendar from './index.js';
 

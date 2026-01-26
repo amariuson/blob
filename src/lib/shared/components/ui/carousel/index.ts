@@ -15,4 +15,5 @@ export {
 	Item,
 	Next,
 	Previous,
-	Root};
+	Root
+};

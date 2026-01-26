@@ -11,4 +11,5 @@ export {
 	Trigger as HoverCardTrigger,
 	Portal,
 	Root,
-	Trigger};
+	Trigger
+};
