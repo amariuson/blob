@@ -57,7 +57,9 @@ export default defineConfig(
 			// Server imports only in server/, api/, remote/, *.server.ts (warn until migration)
 			'features/server-code-location': 'warn',
 			// Distinguish server/api/hooks/ (library) from server/hooks/ (database)
-			'features/hooks-folder-usage': 'warn'
+			'features/hooks-folder-usage': 'warn',
+			// Use relative imports within same feature (not $features/same-feature)
+			'features/prefer-relative-imports': 'error'
 		}
 	},
 	{

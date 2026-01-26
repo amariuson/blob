@@ -9,6 +9,7 @@
  * 5. hooks-folder-usage - Distinguish library hooks from database hooks
  * 6. no-direct-service-imports - Services can only be used in features, not routes
  * 7. prefer-path-aliases - Enforce $features/ and $services/ over full paths
+ * 8. prefer-relative-imports - Use relative imports within same feature
  */
 
 /** @type {import('eslint').ESLint.Plugin} */
@@ -468,6 +469,55 @@ const plugin = {
 								fix(fixer) {
 									return fixer.replaceText(node.source, `'$services/${rest}'`);
 								}
+							});
+						}
+					}
+				};
+			}
+		},
+
+		/**
+		 * Enforces using relative imports within the same feature.
+		 * Files inside $features/user/ should use '../remote' not '$features/user/remote'.
+		 */
+		'prefer-relative-imports': {
+			meta: {
+				type: 'problem',
+				docs: {
+					description: 'Use relative imports within same feature',
+					recommended: true
+				},
+				messages: {
+					useRelativeImport:
+						'Use relative import instead of "$features/{{feature}}/...". You are inside the same feature.'
+				},
+				schema: []
+			},
+			create(context) {
+				const filename = context.filename || context.getFilename();
+
+				// Extract current feature from filename
+				const currentFeatureMatch = filename.match(/features\/([^/]+)/);
+				const currentFeature = currentFeatureMatch ? currentFeatureMatch[1] : null;
+
+				// Skip if not in a feature
+				if (!currentFeature) {
+					return {};
+				}
+
+				return {
+					ImportDeclaration(node) {
+						const importPath = node.source.value;
+
+						// Check if importing from same feature using $features alias
+						if (
+							importPath.startsWith(`$features/${currentFeature}/`) ||
+							importPath === `$features/${currentFeature}`
+						) {
+							context.report({
+								node: node.source,
+								messageId: 'useRelativeImport',
+								data: { feature: currentFeature }
 							});
 						}
 					}

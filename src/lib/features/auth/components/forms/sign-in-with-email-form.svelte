@@ -11,7 +11,7 @@
 	import { toast } from 'svelte-sonner';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
 	import { watch } from 'runed';
-	import { sendEmailOTPForm, signInWithEmailOTPForm } from '$features/auth/remote';
+	import { sendEmailOTPForm, signInWithEmailOTPForm } from '../../remote';
 
 	const id = $props.id();
 	let { class: className } = $props();
