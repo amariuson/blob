@@ -51,8 +51,8 @@ export const signInWithEmailOTPForm = form(signInWithEmailOTPSchema, async (data
 	} catch (err) {
 		if (err instanceof APIError) {
 			if (err.body?.code === 'TOO_MANY_ATTEMPTS') {
-				error(400, {
-					code: 'CONFLICT',
+				error(429, {
+					code: 'TOO_MANY_REQUESTS',
 					message: 'Too many attempts!'
 				});
 			}
