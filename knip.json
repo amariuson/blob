@@ -1,0 +1,21 @@
+{
+	"$schema": "https://unpkg.com/knip@5/schema.json",
+	"entry": [
+		"src/routes/**/*.ts",
+		"src/routes/**/*.svelte",
+		"src/hooks.server.ts",
+		"src/hooks.client.ts",
+		"src/app.d.ts"
+	],
+	"project": ["src/**/*.ts", "src/**/*.svelte"],
+	"paths": {
+		"$lib/*": ["src/lib/*"],
+		"$features/*": ["src/lib/features/*"],
+		"$services/*": ["src/lib/server/services/*"]
+	},
+	"ignore": ["drizzle.config.ts"],
+  "drizzle": false,
+	"sveltekit": {
+		"entry": ["src/routes/**/*.ts", "src/hooks.server.ts", "src/hooks.client.ts"]
+	}
+}
