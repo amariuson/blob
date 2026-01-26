@@ -175,6 +175,7 @@ Prefer remote functions over `+page.server.ts` load functions.
 ```svelte
 <script>
 	import { getPostsQuery, createPostForm } from '$features/posts/remote';
+	import { formHandler } from '$lib/shared/form/form-handler.svelte';
 </script>
 
 {#each await getPostsQuery() as post}
@@ -182,11 +183,8 @@ Prefer remote functions over `+page.server.ts` load functions.
 {/each}
 
 <form
-	{...createPostForm.enhance(async ({ form, submit }) => {
-		await submit();
-		if (createPostForm.fields.allIssues().length > 0) return;
-		form.reset();
-		toast.success('Post created');
+	{...formHandler(createPostForm, {
+		onSuccess: () => toast.success('Post created')
 	})}
 >
 	<input {...createPostForm.fields.title.as('text')} />
@@ -202,6 +200,40 @@ await getPostsQuery.refresh(); // Refetch
 ```
 
 **Load functions:** Use `+layout.server.ts` only for auth guards. Use `+page.server.ts` only for legacy migration.
+
+## formHandler
+
+**Always use `formHandler`** for remote forms. Import from `$lib/shared/form/form-handler.svelte`.
+
+Features:
+
+- Double-submit prevention
+- Error handling (HTTP errors, redirects)
+- Toast notifications on error
+- Validation error detection
+- Form reset on success (default)
+
+```svelte
+import { formHandler } from '$lib/shared/form/form-handler.svelte';
+
+<form {...formHandler(myForm, {
+  onSuccess: ({ data }) => toast.success('Saved!'),
+  onValidationError: ({ issues }) => showErrors = true,
+  resetOnSuccess: true // default
+})}>
+```
+
+**Options:**
+
+- `beforeSubmit` - Return `false` to cancel submission
+- `onSuccess` - Called with `{ data, inputData, form, attempt }`
+- `onValidationError` - Called with `{ issues, form, attempt }`
+- `onError` - Called on unexpected errors
+- `onSettled` - Always called (finally equivalent)
+- `resetOnSuccess` - Auto-reset form (default: `true`)
+- `fallbackErrorMessage` - Default error toast message
+
+If you cannot use `formHandler` for a specific reason, explain why and ask the user.
 
 # Code Standards
 
@@ -267,6 +299,7 @@ Add: `pnpm dlx shadcn-svelte@latest add <component>` → `src/lib/components/ui/
 16. Don't import services (`$services/`) directly in routes - use feature APIs
 17. Don't import from `$features/` in `$lib/shared/` or `$lib/server/` - they're lower level
 18. Don't use full paths - use `$features/` not `$lib/features/`, use `$services/` not `$lib/server/services/`
+19. Don't use raw `.enhance()` on remote forms - use `formHandler` instead
 
 # Testing
 
