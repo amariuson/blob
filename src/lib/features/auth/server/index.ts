@@ -7,4 +7,4 @@ export { createAuthHandle } from './handles/auth';
 export type { Session, ActiveMember } from './auth';
 export { auth } from './auth';
 
-export { getSession } from './api/queries/user';
+export { getSession, getSessionOrNull } from './api/queries/user';

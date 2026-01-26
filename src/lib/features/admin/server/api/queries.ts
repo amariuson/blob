@@ -1,4 +1,3 @@
-import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import * as schema from '$lib/server/db/schema';
@@ -7,7 +6,7 @@ import { z } from 'zod';
 import { error } from '@sveltejs/kit';
 
 // cross feature
-import { getSession, type Session } from '$features/auth/server';
+import { getSession, getSessionOrNull, type Session } from '$features/auth/server';
 
 // ============================================================================
 // Schemas
@@ -50,9 +49,8 @@ export async function getUserForImpersonation(userId: string) {
 // ============================================================================
 
 /** Gets current impersonation status from session. */
-export function getImpersonationStatus() {
-	const event = getRequestEvent();
-	const session = event.locals.session;
+export async function getImpersonationStatus() {
+	const session = await getSessionOrNull();
 
 	if (!session) return null;
 
