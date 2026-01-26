@@ -6,7 +6,8 @@ import { z } from 'zod';
 import { error } from '@sveltejs/kit';
 
 // cross feature
-import { getSession, getSessionOrNull, type Session } from '$features/auth/server';
+import { getSession, getSessionOrNull } from '$features/auth/server';
+import type { Session } from '$features/auth';
 
 // ============================================================================
 // Schemas

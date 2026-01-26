@@ -1,4 +1,3 @@
-import { webhooks } from '@polar-sh/better-auth';
 import { db } from '$lib/server/db';
 import { organization } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
