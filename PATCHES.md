@@ -2,5 +2,9 @@
 
 ### `@sveltejs/kit@2.50.1`
 
-**Why:** Adds `/server` path detection for server-only modules. Also enables remote functions in `/remote/index.ts` files.
-**Status:** Permanent - Svelte team declined to implement this upstream
+| Patch                                             | Status    | Reference                                               |
+| ------------------------------------------------- | --------- | ------------------------------------------------------- |
+| Server path detection & `remote/index.ts` support | Permanent | -                                                       |
+| `RemoteForm.reset()` method                       | Temporary | [PR #14779](https://github.com/sveltejs/kit/pull/14779) |
+
+**When PR #14779 is merged:** Run `pnpm patch @sveltejs/kit`, apply only the permanent changes from `git show HEAD:patches/@sveltejs__kit@2.50.1.patch`, then `pnpm patch-commit`.

@@ -1,3 +1,37 @@
+diff --git a/src/exports/public.d.ts b/src/exports/public.d.ts
+index 200ae665893f01f7b3d9063aa769c23b499f8c19..e2c4819e59a1f235c76965037252442f4609d3e1 100644
+--- a/src/exports/public.d.ts
++++ b/src/exports/public.d.ts
+@@ -5,6 +5,7 @@ import '../types/ambient.js';
+ import {
+ 	AdapterEntry,
+ 	CspDirectives,
++  DeepPartial,
+ 	HttpMethod,
+ 	Logger,
+ 	MaybePromise,
+@@ -2085,6 +2086,21 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
+ 		/** Set this to `true` to only run the `preflight` validation. */
+ 		preflightOnly?: boolean;
+ 	}): Promise<void>;
++  /** Reset the form to its initial state */
++	reset(options?: {
++		/**
++		 * Set this to the new values to reset the form to.
++		 * Set this to `false` to not reset the values.
++		 * @default true
++		 */
++		values?: DeepPartial<Input> | boolean;
++		/** Set this to `false` to not reset the issues. */
++		issues?: boolean;
++		/** Set this to `false` to not reset the result. */
++		result?: boolean;
++		/** Set this to `false` to not reset the touched fields. */
++		touched?: boolean;
++	}): void;
+ 	/** The result of the form submission */
+ 	get result(): Output | undefined;
+ 	/** The number of pending submissions */
 diff --git a/src/exports/vite/dev/index.js b/src/exports/vite/dev/index.js
 index 31c13c1ead8bc4f96da9b095d47c5dfaa2dca20f..a040af39d7ce3ff33d614c957ef9ed6350b8d59f 100644
 --- a/src/exports/vite/dev/index.js
@@ -41,3 +75,117 @@ index 47116b4410f5a88914b7e139b27cdde4d6b60fcb..b8dc749edc0f2e845e8967b5aea1f301
  				return;
  			}
  
+diff --git a/src/runtime/app/server/remote/form.js b/src/runtime/app/server/remote/form.js
+index 9f71d6e7e126524af65fd3ec9d5b470ec3e4c6f4..bb21151872ec18cad72e3c6f20e1f6adfa71aa40 100644
+--- a/src/runtime/app/server/remote/form.js
++++ b/src/runtime/app/server/remote/form.js
+@@ -239,6 +239,20 @@ export function form(validate_or_fn, maybe_fn) {
+ 			}
+ 		});
+ 
++    Object.defineProperty(instance, 'reset', {
++			/** @type {RemoteForm<any, any>['reset']} */
++			value: ({ values = true, issues = true, result = true } = {}) => {
++				const cache = (get_cache(__)[''] ??= {});
++
++				if (values === true) {
++					cache.input = {};
++				} else if (values) cache.input = values;
++
++				if (issues) cache.issues = [];
++				if (result) cache.result = undefined;
++			}
++		});
++
+ 		if (key == undefined) {
+ 			Object.defineProperty(instance, 'for', {
+ 				/** @type {RemoteForm<any, any>['for']} */
+diff --git a/src/runtime/client/remote-functions/form.svelte.js b/src/runtime/client/remote-functions/form.svelte.js
+index c7461e64894167a87f735feaeffc1f42cc73c9d1..062912ba468d93521e0bccc06f73596f7fab1fc3 100644
+--- a/src/runtime/client/remote-functions/form.svelte.js
++++ b/src/runtime/client/remote-functions/form.svelte.js
+@@ -539,6 +539,26 @@ export function form(id) {
+ 						: merge_with_server_issues(form_data, raw_issues, array);
+ 				}
+ 			},
++      reset: {
++				/** @type {RemoteForm<any, any>['reset']} */
++				value: ({
++					values = true,
++					issues: resetIssues = true,
++					result: resetResult = true,
++					touched: resetTouched = true
++				} = {}) => {
++					submitted = false;
++
++					if (values === true) {
++						if (element) element.reset();
++						else input = {};
++					} else if (values) input = values;
++
++					if (resetIssues) raw_issues = [];
++					if (resetResult) result = undefined;
++					if (resetTouched) touched = {};
++				}
++			},
+ 			enhance: {
+ 				/** @type {RemoteForm<any, any>['enhance']} */
+ 				value: (callback) => {
+diff --git a/src/types/private.d.ts b/src/types/private.d.ts
+index d5dbd64a80ffa7054c426328a67bc808a1b422c3..cc790fd2eac371007b3ee88925b3eaaf15c1ab21 100644
+--- a/src/types/private.d.ts
++++ b/src/types/private.d.ts
+@@ -242,4 +242,12 @@ export interface RouteSegment {
+ 
+ export type TrailingSlash = 'never' | 'always' | 'ignore';
+ 
++export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
++	? {
++			[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
++				? DeepPartial<T[K]>
++				: T[K];
++		}
++	: T | undefined;
++
+ export type IsAny<T> = 0 extends 1 & T ? true : false;
+diff --git a/types/index.d.ts b/types/index.d.ts
+index b301ec99186a5838ca6cfb41139e6b6388ec07ed..9f4d973aff8355072da83cbd05689392209f9be8 100644
+--- a/types/index.d.ts
++++ b/types/index.d.ts
+@@ -2060,6 +2060,21 @@ declare module '@sveltejs/kit' {
+ 			/** Set this to `true` to only run the `preflight` validation. */
+ 			preflightOnly?: boolean;
+ 		}): Promise<void>;
++    /** Reset the form to its initial state */
++		reset(options?: {
++			/**
++			 * Set this to the new values to reset the form to.
++			 * Set this to `false` to not reset the values.
++			 * @default true
++			 */
++			values?: DeepPartial<Input> | boolean;
++			/** Set this to `false` to not reset the issues. */
++			issues?: boolean;
++			/** Set this to `false` to not reset the result. */
++			result?: boolean;
++			/** Set this to `false` to not reset the touched fields. */
++			touched?: boolean;
++		}): void;
+ 		/** The result of the form submission */
+ 		get result(): Output | undefined;
+ 		/** The number of pending submissions */
+@@ -2384,6 +2399,14 @@ declare module '@sveltejs/kit' {
+ 
+ 	type TrailingSlash = 'never' | 'always' | 'ignore';
+ 
++	type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
++  ? {
++      [K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
++        ? DeepPartial<T[K]>
++        : T[K];
++    }
++  : T | undefined;
++
+ 	type IsAny<T> = 0 extends 1 & T ? true : false;
+ 	interface Asset {
+ 		file: string;
