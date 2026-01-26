@@ -2,13 +2,10 @@
 	import { signInWithGoogleForm } from '../../remote';
 	import { Button } from '$lib/shared/components/ui/button';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
-	import { cn } from '$lib/shared/utils';
-
-	let { class: className } = $props();
 </script>
 
 <form {...formHandler(signInWithGoogleForm)}>
-	<Button type="submit" variant="outline" class={cn('w-full', className)}>
+	<Button type="submit" variant="outline" class="w-full">
 		<svg xmlns="http://www.w3.org/2000/svg" width="0.98em" height="1em" viewBox="0 0 256 262">
 			<path
 				fill="#4285f4"
