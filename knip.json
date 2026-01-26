@@ -14,7 +14,7 @@
 		"$services/*": ["src/lib/server/services/*"]
 	},
 	"ignore": ["drizzle.config.ts"],
-  "drizzle": false,
+	"drizzle": false,
 	"sveltekit": {
 		"entry": ["src/routes/**/*.ts", "src/hooks.server.ts", "src/hooks.client.ts"]
 	}
