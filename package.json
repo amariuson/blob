@@ -41,6 +41,7 @@
 		"embla-carousel-svelte": "^8.6.0",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-simple-import-sort": "^12.1.1",
 		"eslint-plugin-svelte": "^3.13.1",
 		"globals": "^16.5.0",
 		"knip": "^5.82.1",

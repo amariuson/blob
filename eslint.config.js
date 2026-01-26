@@ -1,11 +1,13 @@
+import { defineConfig } from 'eslint/config';
 import prettier from 'eslint-config-prettier';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import svelte from 'eslint-plugin-svelte';
+import globals from 'globals';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript-eslint';
 import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
-import svelte from 'eslint-plugin-svelte';
-import { defineConfig } from 'eslint/config';
-import globals from 'globals';
-import ts from 'typescript-eslint';
+
 import svelteConfig from './svelte.config.js';
 import features from './tools/eslint/index.js';
 
@@ -18,6 +20,24 @@ export default defineConfig(
 	...svelte.configs.recommended,
 	prettier,
 	...svelte.configs.prettier,
+	{
+		plugins: { 'simple-import-sort': simpleImportSort },
+
+		rules: {
+			'simple-import-sort/imports': [
+				'error',
+				{
+					groups: [
+						['^svelte', '^@sveltejs', '^\\$app', '^\\$env', '^\\$service-worker'],
+						['^\\$'],
+						['^[a-z]', '^@'],
+						['^\\.']
+					]
+				}
+			],
+			'simple-import-sort/exports': 'error'
+		}
+	},
 	{
 		languageOptions: { globals: { ...globals.browser, ...globals.node } },
 
