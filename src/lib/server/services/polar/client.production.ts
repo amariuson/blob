@@ -41,13 +41,13 @@ export function createProductionClient(
 			return transformCustomer(customer);
 		},
 
-		async updateOrganizationCustomer(organizationId, email, name, billingAddress) {
+		async updateOrganizationCustomer(organizationId, fields) {
 			const customer = await sdk.customers.updateExternal({
 				externalId: organizationId,
 				customerUpdateExternalID: {
-					email,
-					name,
-					billingAddress
+					...(fields.email && { email: fields.email }),
+					...(fields.name && { name: fields.name }),
+					...(fields.billingAddress && { billingAddress: fields.billingAddress })
 				}
 			});
 			return transformCustomer(customer);
