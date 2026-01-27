@@ -4,6 +4,7 @@
 	import { Button } from '$lib/shared/components/ui/button/index.js';
 	import { Switch } from '$lib/shared/components/ui/switch/index.js';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+	import { cn } from '$lib/shared/utils.js';
 
 	import BellIcon from '@lucide/svelte/icons/bell';
 	import CheckIcon from '@lucide/svelte/icons/check';
@@ -56,7 +57,7 @@
 	<input type="hidden" name="productUpdates" value={formState.productUpdates ? 'on' : ''} />
 
 	<!-- Master Toggle -->
-	<SettingsCard class={!formState.emailNotifications ? 'opacity-75' : ''}>
+	<SettingsCard class={cn(!formState.emailNotifications && 'opacity-75')}>
 		<SettingsRow
 			title="Email Notifications"
 			description="Receive emails about your account"

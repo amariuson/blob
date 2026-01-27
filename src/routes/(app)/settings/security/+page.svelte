@@ -18,6 +18,7 @@
 	import { Badge } from '$lib/shared/components/ui/badge/index.js';
 	import { Button } from '$lib/shared/components/ui/button/index.js';
 	import { createConfirmation, formHandler } from '$lib/shared/form/form-handler.svelte';
+	import { cn } from '$lib/shared/utils.js';
 
 	import { format } from 'date-fns';
 	import KeyIcon from '@lucide/svelte/icons/key';
@@ -143,9 +144,7 @@
 		<SettingsCard>
 			<SettingsCardHeader
 				title="Active Sessions"
-				description="{sessions.length} {sessions.length === 1
-					? 'session'
-					: 'sessions'} across devices"
+				description={`${sessions.length} ${sessions.length === 1 ? 'session' : 'sessions'} across devices`}
 				icon={LaptopIcon}
 				iconClass="bg-blue-500/10 text-blue-600 dark:text-blue-400"
 			>
@@ -196,21 +195,28 @@
 						>
 							<div class="flex items-center gap-3">
 								<div
-									class="flex size-8 items-center justify-center rounded-md {session.isCurrent
-										? 'bg-green-500/10'
-										: 'bg-muted'}"
+									class={cn(
+										'flex size-8 items-center justify-center rounded-md',
+										session.isCurrent ? 'bg-green-500/10' : 'bg-muted'
+									)}
 								>
 									{#if isMobile}
 										<SmartphoneIcon
-											class="size-4 {session.isCurrent
-												? 'text-green-600 dark:text-green-400'
-												: 'text-muted-foreground'}"
+											class={cn(
+												'size-4',
+												session.isCurrent
+													? 'text-green-600 dark:text-green-400'
+													: 'text-muted-foreground'
+											)}
 										/>
 									{:else}
 										<MonitorIcon
-											class="size-4 {session.isCurrent
-												? 'text-green-600 dark:text-green-400'
-												: 'text-muted-foreground'}"
+											class={cn(
+												'size-4',
+												session.isCurrent
+													? 'text-green-600 dark:text-green-400'
+													: 'text-muted-foreground'
+											)}
 										/>
 									{/if}
 								</div>

@@ -4,6 +4,7 @@
 	import { Badge } from '$lib/shared/components/ui/badge/index.js';
 	import { Button } from '$lib/shared/components/ui/button/index.js';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+	import { cn } from '$lib/shared/utils.js';
 
 	import { formatDistanceToNow } from 'date-fns';
 	import ClockIcon from '@lucide/svelte/icons/clock';
@@ -35,7 +36,7 @@
 			: 'No pending invitations'}
 		icon={SendIcon}
 		iconClass="bg-amber-500/10 text-amber-600 dark:text-amber-400"
-		class={invitations.length === 0 ? 'border-b-0' : ''}
+		class={cn(invitations.length === 0 && 'border-b-0')}
 	/>
 	{#if invitations.length > 0}
 		<SettingsCardContent noPadding>
