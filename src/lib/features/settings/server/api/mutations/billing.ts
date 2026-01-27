@@ -1,5 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 
+import { rolesWithPermission } from '$features/auth';
 import { getActiveMember } from '$features/auth/server';
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
@@ -14,8 +15,13 @@ import { HTTPValidationError } from '@polar-sh/sdk/models/errors/httpvalidatione
 
 import { updateBillingInfoSchema } from '../../../schemas';
 
-// Roles that can manage billing
-const BILLING_MANAGE_ROLES = ['owner', 'admin'];
+const BILLING_MANAGE_ROLES = rolesWithPermission('billing', 'manage');
+
+function requireBillingPermission(role: string) {
+	if (!BILLING_MANAGE_ROLES.includes(role)) {
+		error(403, { message: 'You do not have permission to manage billing', code: 'FORBIDDEN' });
+	}
+}
 
 // ============================================================================
 // Mutations
@@ -27,11 +33,7 @@ const BILLING_MANAGE_ROLES = ['owner', 'admin'];
 export async function updateBillingInfo(data: z.infer<typeof updateBillingInfoSchema>) {
 	const activeMember = await getActiveMember();
 
-	// Check permission
-	if (!BILLING_MANAGE_ROLES.includes(activeMember.role)) {
-		logger.warn({ role: activeMember.role }, 'Permission denied: cannot manage billing');
-		error(403, { message: 'You do not have permission to manage billing', code: 'FORBIDDEN' });
-	}
+	requireBillingPermission(activeMember.role);
 
 	const billingAddress: schema.BillingAddress = {
 		line1: data.line1 || null,
@@ -76,10 +78,7 @@ export async function updateBillingInfo(data: z.infer<typeof updateBillingInfoSc
  */
 export async function createCheckout() {
 	const activeMember = await getActiveMember();
-
-	if (!BILLING_MANAGE_ROLES.includes(activeMember.role)) {
-		error(403, { message: 'You do not have permission to manage billing', code: 'FORBIDDEN' });
-	}
+	requireBillingPermission(activeMember.role);
 
 	logger.info('Creating checkout session');
 
@@ -93,10 +92,7 @@ export async function createCheckout() {
  */
 export async function openBillingPortal() {
 	const activeMember = await getActiveMember();
-
-	if (!BILLING_MANAGE_ROLES.includes(activeMember.role)) {
-		error(403, { message: 'You do not have permission to manage billing', code: 'FORBIDDEN' });
-	}
+	requireBillingPermission(activeMember.role);
 
 	logger.info('Opening billing portal');
 
@@ -111,10 +107,7 @@ export async function openBillingPortal() {
  */
 export async function refreshSubscriptionData() {
 	const activeMember = await getActiveMember();
-
-	if (!BILLING_MANAGE_ROLES.includes(activeMember.role)) {
-		error(403, { message: 'You do not have permission to manage billing', code: 'FORBIDDEN' });
-	}
+	requireBillingPermission(activeMember.role);
 
 	logger.info({ orgId: activeMember.organizationId }, 'Refreshing subscription data from Polar');
 

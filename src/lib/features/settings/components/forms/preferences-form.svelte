@@ -20,20 +20,14 @@
 		TIME_FORMATS
 	} from '../../constants';
 	import { updatePreferencesForm } from '../../remote';
+	import type { UserPreferences } from '../../types';
 	import SettingsCard from '../settings-card.svelte';
 	import SettingsCardContent from '../settings-card-content.svelte';
 	import SettingsCardFooter from '../settings-card-footer.svelte';
 	import SettingsCardHeader from '../settings-card-header.svelte';
 
-	interface Preferences {
-		language: string;
-		timezone: string;
-		dateFormat: string;
-		timeFormat: string;
-	}
-
 	interface Props {
-		preferences: Preferences;
+		preferences: UserPreferences;
 	}
 
 	let { preferences }: Props = $props();

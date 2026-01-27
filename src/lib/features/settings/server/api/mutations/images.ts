@@ -1,5 +1,7 @@
+import { error } from '@sveltejs/kit';
 import { getRequestEvent } from '$app/server';
 
+import { rolesWithPermission } from '$features/auth';
 import { auth, getActiveMember, getSession } from '$features/auth/server';
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
@@ -23,6 +25,64 @@ import {
 } from '../../../schemas';
 import type { ImageUploadResult } from '../../../types';
 
+const ORG_IMAGE_ROLES = rolesWithPermission('organization', 'update');
+
+function requireOrgImagePermission(role: string) {
+	if (!ORG_IMAGE_ROLES.includes(role)) {
+		error(403, {
+			message: 'You do not have permission to manage the organization logo',
+			code: 'FORBIDDEN'
+		});
+	}
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+async function deleteStoredImage(imageUrl: string | null | undefined, label: string) {
+	if (!imageUrl) return;
+	const key = extractKeyFromUrl(imageUrl);
+	if (key) {
+		await deleteObject(key).catch(() => {
+			logger.warn({ key }, `Failed to delete old ${label} from storage`);
+		});
+	}
+}
+
+async function resolveImageTarget(type: 'avatar' | 'org-logo') {
+	if (type === 'avatar') {
+		const session = await getSession();
+		const event = getRequestEvent();
+		const user = await db.query.user.findFirst({
+			where: eq(schema.user.id, session.user.id),
+			columns: { image: true }
+		});
+		return {
+			currentUrl: user?.image ?? null,
+			update: (url: string | null) =>
+				auth.api.updateUser({ headers: event.request.headers, body: { image: url } }),
+			label: 'avatar'
+		};
+	}
+
+	const activeMember = await getActiveMember();
+	requireOrgImagePermission(activeMember.role);
+	const org = await db.query.organization.findFirst({
+		where: eq(schema.organization.id, activeMember.organizationId),
+		columns: { logo: true }
+	});
+	return {
+		currentUrl: org?.logo ?? null,
+		update: (url: string | null) =>
+			db
+				.update(schema.organization)
+				.set({ logo: url })
+				.where(eq(schema.organization.id, activeMember.organizationId)),
+		label: 'logo'
+	};
+}
+
 // ============================================================================
 // Mutations
 // ============================================================================
@@ -43,6 +103,7 @@ export async function prepareImageUpload(
 		prefix = IMAGE_UPLOAD_PREFIXES.avatar;
 	} else {
 		const activeMember = await getActiveMember();
+		requireOrgImagePermission(activeMember.role);
 		ownerId = activeMember.organizationId;
 		prefix = IMAGE_UPLOAD_PREFIXES['org-logo'];
 	}
@@ -62,58 +123,11 @@ export async function prepareImageUpload(
  * Confirms an image upload and updates the user/org record.
  */
 export async function confirmImageUpload(data: z.infer<typeof confirmImageUploadSchema>) {
-	const session = await getSession();
-	const event = getRequestEvent();
-
+	const target = await resolveImageTarget(data.type);
 	const publicUrl = getPublicUrl(data.key);
 
-	if (data.type === 'avatar') {
-		// Get current user to check for existing custom image
-		const user = await db.query.user.findFirst({
-			where: eq(schema.user.id, session.user.id),
-			columns: { image: true }
-		});
-
-		// Delete old custom image if exists
-		if (user?.image) {
-			const oldKey = extractKeyFromUrl(user.image);
-			if (oldKey) {
-				await deleteObject(oldKey).catch(() => {
-					logger.warn({ key: oldKey }, 'Failed to delete old avatar during replacement');
-				});
-			}
-		}
-
-		// Update user image
-		await auth.api.updateUser({
-			headers: event.request.headers,
-			body: { image: publicUrl }
-		});
-	} else {
-		const activeMember = await getActiveMember();
-
-		// Get current org to check for existing custom logo
-		const org = await db.query.organization.findFirst({
-			where: eq(schema.organization.id, activeMember.organizationId),
-			columns: { logo: true }
-		});
-
-		// Delete old custom logo if exists
-		if (org?.logo) {
-			const oldKey = extractKeyFromUrl(org.logo);
-			if (oldKey) {
-				await deleteObject(oldKey).catch(() => {
-					logger.warn({ key: oldKey }, 'Failed to delete old logo during replacement');
-				});
-			}
-		}
-
-		// Update org logo
-		await db
-			.update(schema.organization)
-			.set({ logo: publicUrl })
-			.where(eq(schema.organization.id, activeMember.organizationId));
-	}
+	await deleteStoredImage(target.currentUrl, target.label);
+	await target.update(publicUrl);
 
 	logger.info({ type: data.type, key: data.key }, 'Image upload confirmed');
 
@@ -124,50 +138,10 @@ export async function confirmImageUpload(data: z.infer<typeof confirmImageUpload
  * Removes an image (avatar or org logo).
  */
 export async function removeImage(data: z.infer<typeof removeImageSchema>) {
-	const session = await getSession();
-	const event = getRequestEvent();
+	const target = await resolveImageTarget(data.type);
 
-	if (data.type === 'avatar') {
-		const user = await db.query.user.findFirst({
-			where: eq(schema.user.id, session.user.id),
-			columns: { image: true }
-		});
-
-		if (user?.image) {
-			const key = extractKeyFromUrl(user.image);
-			if (key) {
-				await deleteObject(key).catch(() => {
-					logger.warn({ key }, 'Failed to delete avatar from storage');
-				});
-			}
-		}
-
-		await auth.api.updateUser({
-			headers: event.request.headers,
-			body: { image: null }
-		});
-	} else {
-		const activeMember = await getActiveMember();
-
-		const org = await db.query.organization.findFirst({
-			where: eq(schema.organization.id, activeMember.organizationId),
-			columns: { logo: true }
-		});
-
-		if (org?.logo) {
-			const key = extractKeyFromUrl(org.logo);
-			if (key) {
-				await deleteObject(key).catch(() => {
-					logger.warn({ key }, 'Failed to delete logo from storage');
-				});
-			}
-		}
-
-		await db
-			.update(schema.organization)
-			.set({ logo: null })
-			.where(eq(schema.organization.id, activeMember.organizationId));
-	}
+	await deleteStoredImage(target.currentUrl, target.label);
+	await target.update(null);
 
 	logger.info({ type: data.type }, 'Image removed');
 

@@ -63,10 +63,8 @@ export const removeImageSchema = z.object({
 // ============================================================================
 
 export const revokeSessionSchema = z.object({
-	sessionToken: z.string()
+	sessionId: z.string().min(1)
 });
-
-export const revokeAllOtherSessionsSchema = z.object({});
 
 // ============================================================================
 // Organization

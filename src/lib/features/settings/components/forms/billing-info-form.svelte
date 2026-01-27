@@ -12,22 +12,12 @@
 
 	import { getStateLabel, getStatePlaceholder, requiresState } from '../../logic/countries';
 	import { updateBillingInfoForm } from '../../remote';
+	import type { BillingInfo } from '../../types';
 	import CountryPicker from '../country-picker.svelte';
 	import SettingsCard from '../settings-card.svelte';
 	import SettingsCardContent from '../settings-card-content.svelte';
 	import SettingsCardFooter from '../settings-card-footer.svelte';
 	import SettingsCardHeader from '../settings-card-header.svelte';
-
-	interface BillingInfo {
-		billingAddress: {
-			line1?: string | null;
-			line2?: string | null;
-			city?: string | null;
-			state?: string | null;
-			postalCode?: string | null;
-			country?: string | null;
-		} | null;
-	}
 
 	interface Props {
 		billingInfo: BillingInfo;

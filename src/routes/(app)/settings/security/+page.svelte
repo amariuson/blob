@@ -14,10 +14,10 @@
 		revokeAllOtherSessionsForm,
 		revokeSessionForm
 	} from '$features/settings/remote';
-	import * as AlertDialog from '$lib/shared/components/ui/alert-dialog/index.js';
+	import ConfirmDialog from '$lib/shared/components/confirm-dialog.svelte';
 	import { Badge } from '$lib/shared/components/ui/badge/index.js';
 	import { Button } from '$lib/shared/components/ui/button/index.js';
-	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+	import { createConfirmation, formHandler } from '$lib/shared/form/form-handler.svelte';
 
 	import { format } from 'date-fns';
 	import KeyIcon from '@lucide/svelte/icons/key';
@@ -29,7 +29,7 @@
 	import SmartphoneIcon from '@lucide/svelte/icons/smartphone';
 	import XIcon from '@lucide/svelte/icons/x';
 
-	let showRevokeAllDialog = $state(false);
+	const confirmation = createConfirmation();
 
 	function formatDateTime(date: Date | string): string {
 		return format(new Date(date), 'MMM d, yyyy h:mm a');
@@ -151,9 +151,35 @@
 			>
 				{#snippet action()}
 					{#if sessions.length > 1}
-						<Button variant="outline" size="sm" onclick={() => (showRevokeAllDialog = true)}>
-							Sign Out Others
-						</Button>
+						<form
+							{...formHandler(revokeAllOtherSessionsForm, {
+								beforeSubmit: () =>
+									confirmation.confirm({
+										title: 'Sign out other sessions?',
+										description:
+											'This will sign you out of all other devices. Your current session will remain active.',
+										confirmText: 'Sign Out All',
+										variant: 'destructive'
+									}),
+								onSuccess: async () => {
+									toast.success('All other sessions have been signed out');
+									await getActiveSessionsQuery();
+								},
+								resetOnSuccess: false
+							})}
+						>
+							<Button
+								type="submit"
+								variant="outline"
+								size="sm"
+								disabled={!!revokeAllOtherSessionsForm.pending}
+							>
+								{#if revokeAllOtherSessionsForm.pending}
+									<LoaderIcon class="size-4 animate-spin" />
+								{/if}
+								Sign Out Others
+							</Button>
+						</form>
 					{/if}
 				{/snippet}
 			</SettingsCardHeader>
@@ -213,12 +239,13 @@
 								{@const revokeForm = revokeSessionForm.for(session.id)}
 								<form
 									{...formHandler(revokeForm, {
-										onSuccess: () => {
+										onSuccess: async () => {
 											toast.success('Session revoked');
+											await getActiveSessionsQuery();
 										}
 									})}
 								>
-									<input type="hidden" name="sessionToken" value={session.token} />
+									<input type="hidden" name="sessionId" value={session.id} />
 									<Button
 										type="submit"
 										variant="ghost"
@@ -243,33 +270,4 @@
 	</svelte:boundary>
 </div>
 
-<AlertDialog.Root bind:open={showRevokeAllDialog}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>Sign out other sessions?</AlertDialog.Title>
-			<AlertDialog.Description>
-				This will sign you out of all other devices. Your current session will remain active.
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={!!revokeAllOtherSessionsForm.pending}>Cancel</AlertDialog.Cancel
-			>
-			<form
-				{...formHandler(revokeAllOtherSessionsForm, {
-					onSuccess: () => {
-						showRevokeAllDialog = false;
-						toast.success('All other sessions have been signed out');
-					},
-					resetOnSuccess: false
-				})}
-			>
-				<Button type="submit" disabled={!!revokeAllOtherSessionsForm.pending}>
-					{#if revokeAllOtherSessionsForm.pending}
-						<LoaderIcon class="size-4 animate-spin" />
-					{/if}
-					Sign Out All
-				</Button>
-			</form>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
+<ConfirmDialog {...confirmation.props} />

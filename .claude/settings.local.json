@@ -30,7 +30,11 @@
 			"Bash(find:*)",
 			"Bash(pnpm prettier:*)",
 			"Bash(pnpm build:*)",
-			"mcp__context7__query-docs"
+			"mcp__context7__query-docs",
+			"Bash(pnpm knip:*)",
+			"Bash(git -C /Users/amariuson/dev/projects/blob log --oneline -20)",
+			"Bash(pnpm --version:*)",
+			"Bash(node --version:*)"
 		]
 	}
 }

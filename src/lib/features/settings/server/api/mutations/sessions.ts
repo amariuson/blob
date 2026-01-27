@@ -27,21 +27,31 @@ export async function revokeSession(data: z.infer<typeof revokeSessionSchema>) {
 	const event = getRequestEvent();
 
 	// Prevent revoking current session
-	if (data.sessionToken === session.session.token) {
+	if (data.sessionId === session.session.id) {
 		error(400, {
 			message: 'Cannot revoke current session. Use sign out instead.',
 			code: 'VALIDATION'
 		});
 	}
 
+	// Look up the session token server-side (never exposed to client)
+	const targetSession = await db.query.session.findFirst({
+		where: and(eq(schema.session.id, data.sessionId), eq(schema.session.userId, session.user.id)),
+		columns: { token: true }
+	});
+
+	if (!targetSession) {
+		error(404, { message: 'Session not found', code: 'NOT_FOUND' });
+	}
+
 	// Call better-auth API (clears from Redis secondary storage)
 	await auth.api.revokeSession({
 		headers: event.request.headers,
-		body: { token: data.sessionToken }
+		body: { token: targetSession.token }
 	});
 
 	// Also delete from database (workaround for better-auth bug)
-	await db.delete(schema.session).where(eq(schema.session.token, data.sessionToken));
+	await db.delete(schema.session).where(eq(schema.session.id, data.sessionId));
 
 	logger.info('Session revoked');
 
@@ -67,10 +77,7 @@ export async function revokeAllOtherSessions() {
 	await db
 		.delete(schema.session)
 		.where(
-			and(
-				eq(schema.session.userId, session.user.id),
-				ne(schema.session.token, session.session.token)
-			)
+			and(eq(schema.session.userId, session.user.id), ne(schema.session.id, session.session.id))
 		);
 
 	logger.info('All other sessions revoked');

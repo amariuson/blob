@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { getRequestEvent } from '$app/server';
+import { env } from '$env/dynamic/public';
 
 import { auth, getActiveMember, getSession } from '$features/auth/server';
 import { db } from '$lib/server/db';
@@ -8,8 +9,8 @@ import * as schema from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 import { parseUserAgent } from '../../logic/transforms';
-import { isCustomImage } from '../../logic/validation';
 import type {
+	BillingInfo,
 	InvitationInfo,
 	MemberInfo,
 	NotificationPreferences,
@@ -18,6 +19,13 @@ import type {
 	UserPreferences,
 	UserProfile
 } from '../../types';
+
+function isCustomImage(imageUrl: string | null): boolean {
+	if (!imageUrl) return false;
+	const publicUrl = env.PUBLIC_R2_URL;
+	if (!publicUrl) return false;
+	return imageUrl.startsWith(publicUrl);
+}
 
 // ============================================================================
 // User Profile Queries
@@ -134,8 +142,7 @@ export async function getActiveSessions(): Promise<SessionInfo[]> {
 
 	return sessions.map((s) => ({
 		id: s.id,
-		token: s.token,
-		isCurrent: s.token === session.session.token,
+		isCurrent: s.id === session.session.id,
 		createdAt: s.createdAt,
 		ipAddress: s.ipAddress ?? null,
 		userAgent: s.userAgent ?? null,
@@ -233,7 +240,7 @@ export async function getOrganizationInvitations(): Promise<InvitationInfo[]> {
 /**
  * Gets billing info for the current organization.
  */
-export async function getBillingInfo() {
+export async function getBillingInfo(): Promise<BillingInfo> {
 	const activeMember = await getActiveMember();
 
 	const org = await db.query.organization.findFirst({

@@ -28,7 +28,7 @@
 			fileSize: number;
 		}) => Promise<{ uploadUrl: string; key: string }>;
 		confirmUpload: (data: { key: string }) => Promise<unknown>;
-		removeImage: (data: Record<string, never>) => Promise<unknown>;
+		removeImage: () => Promise<unknown>;
 		onSuccess: () => Promise<void>;
 	}
 
@@ -93,7 +93,7 @@
 		isRemoving = true;
 
 		try {
-			await removeImage({});
+			await removeImage();
 			toast.success(`${label} removed`);
 			await onSuccess();
 		} catch (err) {

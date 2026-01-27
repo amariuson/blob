@@ -45,7 +45,6 @@ export interface ParsedUserAgent {
 
 export interface SessionInfo {
 	id: string;
-	token: string;
 	userAgent: string | null;
 	ipAddress: string | null;
 	createdAt: Date;

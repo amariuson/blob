@@ -287,7 +287,7 @@ const STATE_MAP: Record<string, State[]> = {
 	AU: AU_STATES
 };
 
-const COUNTRIES_WITH_STATES = new Set(['US', 'CA', 'AU', 'BR', 'MX', 'IN', 'MY', 'ID', 'AR', 'CN']);
+const COUNTRIES_WITH_STATES = new Set(['US', 'CA', 'AU']);
 
 export function getCountry(code: string | null | undefined): Country | undefined {
 	if (!code) return undefined;
@@ -323,15 +323,6 @@ export function getStateLabel(countryCode: string | null | undefined): string {
 			return 'Province';
 		case 'AU':
 			return 'State / Territory';
-		case 'BR':
-		case 'MX':
-		case 'IN':
-		case 'AR':
-			return 'State';
-		case 'ID':
-		case 'MY':
-		case 'CN':
-			return 'Province';
 		default:
 			return 'State / Province';
 	}
@@ -352,20 +343,6 @@ export function getStatePlaceholder(countryCode: string | null | undefined): str
 			return 'ON';
 		case 'AU':
 			return 'NSW';
-		case 'BR':
-			return 'SP';
-		case 'MX':
-			return 'CDMX';
-		case 'IN':
-			return 'MH';
-		case 'AR':
-			return 'BA';
-		case 'CN':
-			return 'GD';
-		case 'ID':
-			return 'JK';
-		case 'MY':
-			return 'KL';
 		default:
 			return '';
 	}

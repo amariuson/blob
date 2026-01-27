@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
 
+	import { rolesWithPermission } from '$features/auth';
 	import { getActiveMemberQuery } from '$features/auth/remote';
 	import {
 		BillingInfoForm,
@@ -27,8 +27,7 @@
 	import SparklesIcon from '@lucide/svelte/icons/sparkles';
 	import ZapIcon from '@lucide/svelte/icons/zap';
 
-	// Roles that can manage billing
-	const BILLING_MANAGE_ROLES = ['owner', 'admin'];
+	const BILLING_MANAGE_ROLES = rolesWithPermission('billing', 'manage');
 </script>
 
 <svelte:head>
@@ -162,7 +161,7 @@
 						If your subscription status appears out of date, you can manually refresh it from Polar.
 						This will update your plan, benefits, and usage data.
 					</p>
-					{#if billingInfo.entitlements?.updatedAt}
+					{#if billingInfo.entitlements?.updatedAt?.getTime()}
 						<p class="mt-2 text-xs text-muted-foreground">
 							Last updated: {billingInfo.entitlements.updatedAt.toLocaleString()}
 						</p>
@@ -171,9 +170,8 @@
 				<SettingsCardFooter>
 					<form
 						{...formHandler(refreshSubscriptionDataForm, {
-							onSuccess: async () => {
+							onSuccess: () => {
 								toast.success('Subscription data refreshed');
-								await invalidateAll();
 							}
 						})}
 					>

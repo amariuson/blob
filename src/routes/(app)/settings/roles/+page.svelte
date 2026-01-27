@@ -1,25 +1,16 @@
 <script lang="ts">
 	import { type PermissionMap, type RoleDefinition, roleDefinitions } from '$features/auth';
-	import { SettingsCard, SettingsCardContent, SettingsCardHeader } from '$features/settings';
+	import {
+		getRoleIcon,
+		SettingsCard,
+		SettingsCardContent,
+		SettingsCardHeader
+	} from '$features/settings';
 	import { cn } from '$lib/shared/utils';
 
-	import CrownIcon from '@lucide/svelte/icons/crown';
 	import KeyIcon from '@lucide/svelte/icons/key';
-	import ShieldIcon from '@lucide/svelte/icons/shield';
-	import UserIcon from '@lucide/svelte/icons/user';
 
 	const roles: RoleDefinition[] = roleDefinitions;
-
-	function getRoleIcon(roleName: string) {
-		switch (roleName.toLowerCase()) {
-			case 'owner':
-				return CrownIcon;
-			case 'admin':
-				return ShieldIcon;
-			default:
-				return UserIcon;
-		}
-	}
 
 	function getRoleIconClass(roleName: string): string {
 		switch (roleName.toLowerCase()) {

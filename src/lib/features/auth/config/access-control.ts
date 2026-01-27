@@ -108,3 +108,19 @@ export const assignableRoles = roleDefinitions
 		slug: role.name,
 		description: role.description
 	}));
+
+/**
+ * Returns org role names that have the given permission.
+ * Derives from roleConfig so changes propagate automatically.
+ */
+export function rolesWithPermission<R extends keyof typeof orgPermissions>(
+	resource: R,
+	action: (typeof orgPermissions)[R][number]
+): string[] {
+	return Object.entries(roleConfig)
+		.filter(([, config]) => {
+			const perms = config.permissions as Record<string, readonly string[]>;
+			return perms[resource]?.includes(action);
+		})
+		.map(([name]) => name);
+}

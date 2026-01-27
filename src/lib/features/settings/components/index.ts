@@ -9,6 +9,8 @@ export { default as SettingsCardHeader } from './settings-card-header.svelte';
 
 // Other components
 export { default as CountryPicker } from './country-picker.svelte';
+export { default as OrganizationInvitations } from './organization-invitations.svelte';
+export { default as OrganizationMembers } from './organization-members.svelte';
 
 // Forms
 export { default as BillingInfoForm } from './forms/billing-info-form.svelte';

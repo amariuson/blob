@@ -44,12 +44,9 @@ export {
 // Logic utilities
 export type { Country, CountryGroup, State } from './logic';
 export {
-	formatSessionInfo,
-	getDeviceDescription,
 	getProviderDisplayName,
-	getRoleDisplayInfo,
-	isCustomImage,
-	isValidFileSize,
+	getRoleBadgeVariant,
+	getRoleIcon,
 	isValidImageType,
 	parseUserAgent
 } from './logic';
@@ -60,6 +57,8 @@ export {
 	CountryPicker,
 	InviteMemberForm,
 	NotificationsForm,
+	OrganizationInvitations,
+	OrganizationMembers,
 	PreferencesForm,
 	SettingsCard,
 	SettingsCardContent,

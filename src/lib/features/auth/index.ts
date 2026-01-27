@@ -9,4 +9,4 @@ export type { ActiveMember, Session } from './server/auth';
 
 // Access control (for UI display)
 export type { PermissionMap, RoleDefinition } from './config/access-control';
-export { roleDefinitions } from './config/access-control';
+export { roleDefinitions, rolesWithPermission } from './config/access-control';

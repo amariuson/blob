@@ -6,7 +6,6 @@ import {
 	inviteMemberSchema,
 	prepareImageUploadSchema,
 	removeImageSchema,
-	revokeAllOtherSessionsSchema,
 	revokeSessionSchema,
 	updateBillingInfoSchema,
 	updateNotificationsSchema,
@@ -83,10 +82,7 @@ export const refreshSubscriptionDataForm = form(refreshSubscriptionData);
 
 export const revokeSessionForm = form(revokeSessionSchema, revokeSession);
 
-export const revokeAllOtherSessionsForm = form(
-	revokeAllOtherSessionsSchema,
-	revokeAllOtherSessions
-);
+export const revokeAllOtherSessionsForm = form(revokeAllOtherSessions);
 
 export const inviteMemberForm = form(inviteMemberSchema, inviteMember);
 

@@ -1,14 +1,11 @@
 // Transforms
-export {
-	formatSessionInfo,
-	getDeviceDescription,
-	getProviderDisplayName,
-	getRoleDisplayInfo,
-	parseUserAgent
-} from './transforms';
+export { getProviderDisplayName, parseUserAgent } from './transforms';
+
+// Role display helpers
+export { getRoleBadgeVariant, getRoleIcon } from './role-display';
 
 // Validation
-export { isCustomImage, isValidFileSize, isValidImageType } from './validation';
+export { isValidImageType } from './validation';
 
 // Countries
 export type { Country, CountryGroup, State } from './countries';
@@ -16,11 +13,8 @@ export {
 	ALL_COUNTRIES,
 	AU_STATES,
 	CA_PROVINCES,
-	ALL_COUNTRIES as COUNTRIES,
 	COUNTRIES_BY_CONTINENT,
-	requiresState as countryHasStates,
 	getCountry,
-	getCountry as getCountryByCode,
 	getCountryFlag,
 	getCountryName,
 	getStateByCode,

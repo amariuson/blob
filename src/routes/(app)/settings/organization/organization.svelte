@@ -1,19 +1,21 @@
 <script lang="ts">
-	import type { Component } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
-	import type { ActiveMember } from '$features/auth';
+	import { type ActiveMember, rolesWithPermission } from '$features/auth';
 	import type { InvitationInfo, MemberInfo, OrganizationSettings } from '$features/settings';
 	import {
+		getRoleBadgeVariant,
+		getRoleIcon,
+		InviteMemberForm,
+		OrganizationInvitations,
+		OrganizationMembers,
 		SettingsCard,
 		SettingsCardContent,
 		SettingsCardFooter,
 		SettingsCardHeader,
 		SettingsRow
 	} from '$features/settings';
-	import { InviteMemberForm } from '$features/settings';
 	import {
-		cancelInvitationForm,
 		confirmImageUploadCommand,
 		getOrganizationSettingsQuery,
 		prepareImageUploadCommand,
@@ -21,29 +23,18 @@
 		updateOrganizationForm
 	} from '$features/settings/remote';
 	import ImageUpload from '$lib/shared/components/image-upload.svelte';
-	import * as Avatar from '$lib/shared/components/ui/avatar/index.js';
 	import { Badge } from '$lib/shared/components/ui/badge/index.js';
 	import { Button } from '$lib/shared/components/ui/button/index.js';
 	import { Input } from '$lib/shared/components/ui/input/index.js';
 	import { Label } from '$lib/shared/components/ui/label/index.js';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
-	import { getInitials } from '$lib/shared/utils';
 
-	import { format, formatDistanceToNow } from 'date-fns';
+	import { format } from 'date-fns';
 	import BadgeCheckIcon from '@lucide/svelte/icons/badge-check';
 	import BuildingIcon from '@lucide/svelte/icons/building';
 	import CheckIcon from '@lucide/svelte/icons/check';
-	import ClockIcon from '@lucide/svelte/icons/clock';
-	import CrownIcon from '@lucide/svelte/icons/crown';
 	import ImageIcon from '@lucide/svelte/icons/image';
 	import LoaderIcon from '@lucide/svelte/icons/loader';
-	import MailIcon from '@lucide/svelte/icons/mail';
-	import PlusIcon from '@lucide/svelte/icons/plus';
-	import SendIcon from '@lucide/svelte/icons/send';
-	import ShieldIcon from '@lucide/svelte/icons/shield';
-	import UserIcon from '@lucide/svelte/icons/user';
-	import UsersIcon from '@lucide/svelte/icons/users';
-	import XIcon from '@lucide/svelte/icons/x';
 
 	interface Props {
 		org: OrganizationSettings;
@@ -56,40 +47,13 @@
 
 	let inviteDialogOpen = $state(false);
 
-	// Roles that can manage org
-	const ORG_MANAGE_ROLES = ['owner', 'admin'];
+	const ORG_MANAGE_ROLES = rolesWithPermission('organization', 'update');
 
 	const canManage = $derived(ORG_MANAGE_ROLES.includes(activeMember.role));
 	const RoleIcon = $derived(getRoleIcon(activeMember.role));
 
 	function formatDate(date: Date | string): string {
 		return format(new Date(date), 'MMM d, yyyy');
-	}
-
-	function formatRelativeTime(date: Date | string): string {
-		return formatDistanceToNow(new Date(date), { addSuffix: true });
-	}
-
-	function getRoleIcon(role: string): Component {
-		switch (role) {
-			case 'owner':
-				return CrownIcon;
-			case 'admin':
-				return ShieldIcon;
-			default:
-				return UserIcon;
-		}
-	}
-
-	function getRoleBadgeVariant(role: string): 'default' | 'secondary' | 'outline' {
-		switch (role) {
-			case 'owner':
-				return 'default';
-			case 'admin':
-				return 'secondary';
-			default:
-				return 'outline';
-		}
 	}
 
 	// Image upload helpers bound to 'org-logo' type
@@ -244,119 +208,11 @@
 {/if}
 
 <!-- Members -->
-<SettingsCard>
-	<SettingsCardHeader
-		title="Members"
-		description="{members.length} {members.length === 1
-			? 'member'
-			: 'members'} in this organization"
-		icon={UsersIcon}
-		iconClass="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-	>
-		{#snippet action()}
-			{#if canManage}
-				<Button variant="outline" size="sm" onclick={() => (inviteDialogOpen = true)}>
-					<PlusIcon class="size-4" />
-					Invite
-				</Button>
-			{/if}
-		{/snippet}
-	</SettingsCardHeader>
-	<SettingsCardContent noPadding>
-		<div class="divide-y">
-			{#each members as member (member.id)}
-				{@const MemberRoleIcon = getRoleIcon(member.role)}
-				<div
-					class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-muted/50"
-				>
-					<div class="flex items-center gap-3">
-						<Avatar.Root class="size-8">
-							<Avatar.Image src={member.image ?? ''} alt={member.name} />
-							<Avatar.Fallback class="text-xs">
-								{getInitials(member.name)}
-							</Avatar.Fallback>
-						</Avatar.Root>
-						<div class="min-w-0">
-							<p class="truncate text-sm font-medium">{member.name}</p>
-							<p class="truncate text-xs text-muted-foreground">{member.email}</p>
-						</div>
-					</div>
-					<Badge variant={getRoleBadgeVariant(member.role)} class="shrink-0 text-xs">
-						<MemberRoleIcon class="mr-1 size-3" />
-						<span class="capitalize">{member.role}</span>
-					</Badge>
-				</div>
-			{/each}
-		</div>
-	</SettingsCardContent>
-</SettingsCard>
+<OrganizationMembers {members} {canManage} onInvite={() => (inviteDialogOpen = true)} />
 
 <!-- Pending Invitations (Admin only) -->
 {#if canManage}
-	<SettingsCard>
-		<SettingsCardHeader
-			title="Pending Invitations"
-			description={invitations.length > 0
-				? `${invitations.length} invitation${invitations.length === 1 ? '' : 's'} pending`
-				: 'No pending invitations'}
-			icon={SendIcon}
-			iconClass="bg-amber-500/10 text-amber-600 dark:text-amber-400"
-			class={invitations.length === 0 ? 'border-b-0' : ''}
-		/>
-		{#if invitations.length > 0}
-			<SettingsCardContent noPadding>
-				<div class="divide-y">
-					{#each invitations as invitation (invitation.id)}
-						{@const cancelForm = cancelInvitationForm.for(invitation.id)}
-						<div
-							class="flex items-center justify-between px-4 py-3 transition-colors hover:bg-muted/50"
-						>
-							<div class="flex items-center gap-3">
-								<div class="flex size-8 items-center justify-center rounded-full bg-muted">
-									<MailIcon class="size-4 text-muted-foreground" />
-								</div>
-								<div class="min-w-0">
-									<p class="truncate text-sm font-medium">{invitation.email}</p>
-									<div class="flex items-center gap-2 text-xs text-muted-foreground">
-										<Badge variant="outline" class="text-xs capitalize">
-											{invitation.role ?? 'member'}
-										</Badge>
-										<span class="flex items-center gap-1">
-											<ClockIcon class="size-3" />
-											{formatRelativeTime(invitation.expiresAt)}
-										</span>
-									</div>
-								</div>
-							</div>
-							<form
-								{...formHandler(cancelForm, {
-									onSuccess: () => {
-										toast.success('Invitation cancelled');
-									}
-								})}
-							>
-								<input type="hidden" name="invitationId" value={invitation.id} />
-								<Button
-									type="submit"
-									variant="ghost"
-									size="icon"
-									disabled={!!cancelForm.pending}
-									class="size-8 text-muted-foreground hover:text-destructive"
-								>
-									{#if cancelForm.pending}
-										<LoaderIcon class="size-4 animate-spin" />
-									{:else}
-										<XIcon class="size-4" />
-									{/if}
-									<span class="sr-only">Cancel invitation</span>
-								</Button>
-							</form>
-						</div>
-					{/each}
-				</div>
-			</SettingsCardContent>
-		{/if}
-	</SettingsCard>
+	<OrganizationInvitations {invitations} />
 {/if}
 
 <!-- Your Role -->

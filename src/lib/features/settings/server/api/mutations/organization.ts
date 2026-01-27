@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 
+import { rolesWithPermission } from '$features/auth';
 import { getActiveMember } from '$features/auth/server';
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
@@ -12,8 +13,7 @@ import { HTTPValidationError } from '@polar-sh/sdk/models/errors/httpvalidatione
 
 import { updateOrganizationSchema } from '../../../schemas';
 
-// Roles that can update organization settings
-const ORG_UPDATE_ROLES = ['owner', 'admin'];
+const ORG_UPDATE_ROLES = rolesWithPermission('organization', 'update');
 
 // ============================================================================
 // Mutations

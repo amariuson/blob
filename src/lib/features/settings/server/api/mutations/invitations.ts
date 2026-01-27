@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { getRequestEvent } from '$app/server';
 
+import { rolesWithPermission } from '$features/auth';
 import { auth, getActiveMember } from '$features/auth/server';
 import { logger } from '$services/logger';
 
@@ -8,11 +9,8 @@ import { z } from 'zod';
 
 import { cancelInvitationSchema, inviteMemberSchema } from '../../../schemas';
 
-// Roles that can invite members
-const INVITATION_INVITE_ROLES = ['owner', 'admin'];
-
-// Roles that can cancel invitations
-const INVITATION_CANCEL_ROLES = ['owner', 'admin'];
+const INVITATION_INVITE_ROLES = rolesWithPermission('invitation', 'create');
+const INVITATION_CANCEL_ROLES = rolesWithPermission('invitation', 'cancel');
 
 // ============================================================================
 // Mutations
