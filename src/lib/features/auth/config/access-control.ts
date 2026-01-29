@@ -20,7 +20,8 @@ const orgPermissions = {
 	organization: ['read', 'update', 'delete'],
 	member: ['create', 'read', 'update', 'delete'],
 	billing: ['read', 'manage'],
-	invitation: ['create', 'read', 'cancel']
+	invitation: ['create', 'read', 'cancel'],
+	file: ['create', 'read', 'update', 'delete']
 } as const;
 
 export const permissions = {
@@ -58,7 +59,8 @@ const roleConfig = {
 			organization: ['read', 'update', 'delete'],
 			member: ['create', 'read', 'update', 'delete'],
 			billing: ['read', 'manage'],
-			invitation: ['create', 'read', 'cancel']
+			invitation: ['create', 'read', 'cancel'],
+			file: ['create', 'read', 'update', 'delete']
 		}
 	},
 	admin: {
@@ -67,14 +69,16 @@ const roleConfig = {
 			organization: ['read', 'update'],
 			member: ['create', 'read', 'update', 'delete'],
 			billing: ['read', 'manage'],
-			invitation: ['create', 'read', 'cancel']
+			invitation: ['create', 'read', 'cancel'],
+			file: ['create', 'read', 'update', 'delete']
 		}
 	},
 	member: {
 		description: 'Read-only access to organization information',
 		permissions: {
 			organization: ['read'],
-			member: ['read']
+			member: ['read'],
+			file: ['create', 'read']
 		}
 	}
 } as const satisfies Record<string, { description: string; permissions: PermissionMap }>;
