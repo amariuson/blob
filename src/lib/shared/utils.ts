@@ -47,3 +47,42 @@ export function invariant(
 	}
 	throw new Error(prefix);
 }
+
+export function getInitials(name: string): string {
+	return name
+		.split(' ')
+		.filter(Boolean)
+		.map((n) => n[0])
+		.join('')
+		.toUpperCase()
+		.slice(0, 2);
+}
+
+export async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+	const response = await fetch(dataUrl);
+	return response.blob();
+}
+
+export interface ImageUploadConfig {
+	maxSizeBytes: number;
+	allowedTypes: string[];
+}
+
+export const IMAGE_UPLOAD_CONFIG: ImageUploadConfig = {
+	maxSizeBytes: 5 * 1024 * 1024,
+	allowedTypes: ['image/png', 'image/jpeg', 'image/webp']
+};
+
+export function validateFile(
+	file: Blob,
+	config: ImageUploadConfig
+): { valid: true } | { valid: false; error: string } {
+	if (!config.allowedTypes.includes(file.type)) {
+		return { valid: false, error: 'Please upload a PNG, JPEG, or WebP image' };
+	}
+	if (file.size > config.maxSizeBytes) {
+		const maxMB = config.maxSizeBytes / (1024 * 1024);
+		return { valid: false, error: `File size must be under ${maxMB}MB` };
+	}
+	return { valid: true };
+}

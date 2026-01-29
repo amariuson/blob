@@ -19,7 +19,7 @@ import {
 	invitationActionSchema
 } from '../server/api/mutations/onboarding';
 import { signOutUser } from '../server/api/mutations/user';
-import { getUserInvitations } from '../server/api/queries/user';
+import { getActiveMember, getUserInvitations } from '../server/api/queries/user';
 import { getSession } from '../server/api/queries/user';
 
 export const signOutUserForm = form(async () => {
@@ -65,3 +65,7 @@ export const signInWithEmailOTPForm = form(signInWithEmailOTPSchema, async (data
 });
 
 export const signInWithGoogleForm = form(z.object(), signInWithGoogle);
+
+// member
+
+export const getActiveMemberQuery = query(getActiveMember);

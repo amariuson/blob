@@ -94,8 +94,13 @@ export function createMockClient(): PolarAdapter {
 			return createMockCustomer(organizationId, email, name);
 		},
 
-		async updateOrganizationCustomer(organizationId, email, name, billingAddress) {
-			return createMockCustomer(organizationId, email, name, billingAddress);
+		async updateOrganizationCustomer(organizationId, fields) {
+			return createMockCustomer(
+				organizationId,
+				fields.email ?? 'mock@example.com',
+				fields.name ?? null,
+				fields.billingAddress ?? null
+			);
 		},
 
 		async createOrganizationPortalURL() {

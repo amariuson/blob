@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm check:*)",
+      "Bash(pnpm test:unit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(tree:*)",
+      "Bash(wc:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(npm show:*)",
+      "Bash(pnpm add:*)",
+      "Bash(ls:*)",
+      "mcp__svelte__list-sections",
+      "mcp__svelte__get-documentation",
+      "WebSearch",
+      "Bash(gh issue view:*)",
+      "Bash(cat:*)",
+      "Bash(npm run check:*)",
+      "Bash(xargs cat:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm exec prettier:*)",
+      "Bash(pnpm eslint:*)",
+      "Bash(pnpm run lint:*)",
+      "Bash(pnpm run check:*)",
+      "Bash(echo \"Summary of cross-feature imports found:\" grep -r \"import.*$features\" /Users/amariuson/dev/projects/blob/src --include=\"*.ts\" --include=\"*.svelte\")",
+      "WebFetch(domain:github.com)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh search:*)",
+      "Bash(find:*)",
+      "Bash(pnpm prettier:*)",
+      "Bash(pnpm build:*)",
+      "mcp__context7__query-docs",
+      "Bash(pnpm knip:*)",
+      "Bash(git -C /Users/amariuson/dev/projects/blob log --oneline -20)",
+      "Bash(pnpm --version:*)",
+      "Bash(node --version:*)",
+      "mcp__context7__resolve-library-id",
+      "Bash(head:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}

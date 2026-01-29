@@ -19,9 +19,11 @@ export type PolarAdapter = {
 
 	updateOrganizationCustomer(
 		organizationId: string,
-		email: string,
-		name: string,
-		billingAddress: AddressInput
+		fields: {
+			email?: string;
+			name?: string;
+			billingAddress?: AddressInput;
+		}
 	): Promise<PolarCustomer>;
 
 	createOrganizationPortalURL(organizationId: string): Promise<string>;

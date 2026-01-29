@@ -61,6 +61,7 @@ src/lib/
 ├── index.ts                # Client-safe public API
 ├── constants.ts            # Feature constants
 ├── types.ts                # Feature types
+├── schemas.ts              # Client-safe Zod schemas (shared)
 ├── config/                 # Configuration (e.g., access-control.ts)
 ├── logic/                  # Pure functions (validation, transforms)
 ├── components/             # UI components
@@ -82,20 +83,21 @@ src/lib/
 
 ## Folder Rules
 
-| Location            | Purpose                               | Can Import                                | Cannot Contain              |
-| ------------------- | ------------------------------------- | ----------------------------------------- | --------------------------- |
-| `index.ts`          | Client-safe public API                | `server/api/` schemas, `config/`, `types` | Business logic, server code |
-| `config/`           | Static config (permissions)           | Types only                                | Server code                 |
-| `logic/`            | Pure functions                        | Types only                                | Data ops, side effects      |
-| `components/`       | Svelte components                     | Feature exports, `$lib/shared/`           | Business logic              |
-| `remote/`           | `query()`, `form()`, `command()` only | `server/api/`, `$lib/server/`             | Schemas, helpers, logic     |
-| `server/index.ts`   | Server-only public API                | Everything in `server/`                   | Internal details            |
-| `server/api/`       | Business logic + Zod schemas          | `$lib/server/`, `logic/`                  | Remote functions            |
-| `server/api/hooks/` | Library lifecycle hooks & callbacks   | `api/`, `$lib/server/`                    | Database hooks              |
-| `server/adapters/`  | External service adapters             | `$lib/server/`                            | Data operations             |
-| `server/hooks/`     | Database/ORM hooks                    | `$lib/server/db`                          | Library hooks               |
-| `server/handles/`   | SvelteKit handle creators             | `api/`, `$lib/server/`                    | Business logic              |
-| `server/plugins/`   | Library plugins                       | `$lib/server/`, `api/`                    | Core business logic         |
+| Location            | Purpose                               | Can Import                      | Cannot Contain              |
+| ------------------- | ------------------------------------- | ------------------------------- | --------------------------- |
+| `index.ts`          | Client-safe public API                | `schemas`, `config/`, `types`   | Business logic, server code |
+| `schemas.ts`        | Client-safe Zod schemas (shared)      | Types only                      | Server code, business logic |
+| `config/`           | Static config (permissions)           | Types only                      | Server code                 |
+| `logic/`            | Pure functions                        | Types only                      | Data ops, side effects      |
+| `components/`       | Svelte components                     | Feature exports, `$lib/shared/` | Business logic              |
+| `remote/`           | `query()`, `form()`, `command()` only | `server/api/`, `$lib/server/`   | Schemas, helpers, logic     |
+| `server/index.ts`   | Server-only public API                | Everything in `server/`         | Internal details            |
+| `server/api/`       | Business logic + Zod schemas          | `$lib/server/`, `logic/`        | Remote functions            |
+| `server/api/hooks/` | Library lifecycle hooks & callbacks   | `api/`, `$lib/server/`          | Database hooks              |
+| `server/adapters/`  | External service adapters             | `$lib/server/`                  | Data operations             |
+| `server/hooks/`     | Database/ORM hooks                    | `$lib/server/db`                | Library hooks               |
+| `server/handles/`   | SvelteKit handle creators             | `api/`, `$lib/server/`          | Business logic              |
+| `server/plugins/`   | Library plugins                       | `$lib/server/`, `api/`          | Core business logic         |
 
 **Note:** `remote/` and `server/` folders enforce server-only execution. No `.server.ts` suffix needed inside.
 
@@ -133,8 +135,11 @@ import { roles } from './config/access-control';
 ## API + Remote Pattern
 
 ```typescript
-// server/api/mutations/posts.ts - Business logic + schemas
+// schemas.ts - Client-safe Zod schemas (importable from index.ts, remote/, server/)
 export const createPostSchema = z.object({ title: z.string(), content: z.string() });
+
+// server/api/mutations/posts.ts - Business logic
+import { createPostSchema } from '../../schemas';
 export async function createPost(data: z.infer<typeof createPostSchema>) {
 	await db.insert(posts).values(data);
 	redirect(303, '/posts');
@@ -148,13 +153,14 @@ export async function getPosts() {
 // remote/index.ts - Thin wrappers ONLY
 import { query, form } from '$app/server';
 import { getPosts } from '../server/api/queries/posts';
-import { createPost, createPostSchema } from '../server/api/mutations/posts';
+import { createPost } from '../server/api/mutations/posts';
+import { createPostSchema } from '../schemas';
 
 export const getPostsQuery = query(getPosts);
 export const createPostForm = form(createPostSchema, createPost);
 
 // index.ts - Client-safe public API (components, types, schemas - NOT remote functions)
-export { createPostSchema } from './server/api/mutations/posts'; // Schemas for client-side validation
+export { createPostSchema } from './schemas';
 
 // server/index.ts - Server-only public API
 export { createPost, getPosts } from './api';
@@ -248,6 +254,16 @@ If you cannot use `formHandler` for a specific reason, explain why and ask the u
 
 - Use runes (`$state`, `$derived`, `$effect`)
 - Avoid `$effect` - prefer `$derived` for computed values, event handlers for actions
+- When initializing `$state` from props to create a mutable local copy (e.g., form state), use `// svelte-ignore state_referenced_locally` with a comment explaining intent:
+
+```svelte
+// svelte-ignore state_referenced_locally
+// Captures initial prop value as mutable form state
+let formState = $state({ ...preferences });
+```
+
+Do NOT use IIFEs or other workarounds. Only use `svelte-ignore` when the intent is to snapshot the initial prop value into non-reactive local state.
+
 - Use `let { children } = $props()` and `{@render children?.()}`
 - Forms in `components/forms/`
 - Prefer `await` expressions over `{#await}` blocks:
