@@ -440,3 +440,55 @@ export const featureFlagHistoryRelations = relations(featureFlagHistory, ({ one 
 		references: [user.id]
 	})
 }));
+
+// ============================================
+// Files
+// ============================================
+
+export const fileVisibilityEnum = pgEnum('file_visibility', ['private', 'organization', 'public']);
+
+export type FileVisibility = 'private' | 'organization' | 'public';
+
+export const file = pgTable(
+	'file',
+	{
+		id: uuidv7('id').primaryKey(),
+		// File metadata
+		name: text('name').notNull(),
+		key: text('key').notNull().unique(), // Storage key (e.g., "files/{orgId}/{uuid}.pdf")
+		contentType: text('content_type').notNull(),
+		size: integer('size').notNull(), // File size in bytes
+		// Ownership
+		organizationId: uuid('organization_id')
+			.notNull()
+			.references(() => organization.id, { onDelete: 'cascade' }),
+		uploadedBy: uuid('uploaded_by')
+			.notNull()
+			.references(() => user.id, { onDelete: 'set null' }),
+		// Access control
+		visibility: fileVisibilityEnum('visibility').default('organization').notNull(),
+		// Timestamps
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+		updatedAt: timestamp('updated_at')
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('file_organization_idx').on(table.organizationId),
+		index('file_uploaded_by_idx').on(table.uploadedBy),
+		index('file_visibility_idx').on(table.visibility),
+		index('file_created_at_idx').on(table.createdAt)
+	]
+);
+
+export const fileRelations = relations(file, ({ one }) => ({
+	organization: one(organization, {
+		fields: [file.organizationId],
+		references: [organization.id]
+	}),
+	uploader: one(user, {
+		fields: [file.uploadedBy],
+		references: [user.id]
+	})
+}));
