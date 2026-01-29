@@ -25,12 +25,11 @@
 
 	let { billingInfo }: Props = $props();
 
-	// Initialize form state - IIFE captures initial value
-	let formState = $state(
-		(() => ({
-			country: billingInfo.billingAddress?.country ?? null
-		}))()
-	);
+	// svelte-ignore state_referenced_locally
+	// Captures initial prop value as mutable form state
+	let formState = $state({
+		country: billingInfo.billingAddress?.country ?? null
+	});
 </script>
 
 <form

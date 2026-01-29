@@ -2,6 +2,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import {
+		formatDateTime,
 		getProviderDisplayName,
 		SettingsCard,
 		SettingsCardContent,
@@ -11,6 +12,7 @@
 	import {
 		getActiveSessionsQuery,
 		getUserProfileQuery,
+		getUserSettingsQuery,
 		revokeAllOtherSessionsForm,
 		revokeSessionForm
 	} from '$features/settings/remote';
@@ -20,7 +22,6 @@
 	import { createConfirmation, formHandler } from '$lib/shared/form/form-handler.svelte';
 	import { cn } from '$lib/shared/utils.js';
 
-	import { format } from 'date-fns';
 	import KeyIcon from '@lucide/svelte/icons/key';
 	import LaptopIcon from '@lucide/svelte/icons/laptop';
 	import LinkIcon from '@lucide/svelte/icons/link';
@@ -31,10 +32,6 @@
 	import XIcon from '@lucide/svelte/icons/x';
 
 	const confirmation = createConfirmation();
-
-	function formatDateTime(date: Date | string): string {
-		return format(new Date(date), 'MMM d, yyyy h:mm a');
-	}
 </script>
 
 <svelte:head>
@@ -138,7 +135,10 @@
 			</SettingsCard>
 		{/snippet}
 
-		{@const sessions = await getActiveSessionsQuery()}
+		{@const [sessions, { preferences }] = await Promise.all([
+			getActiveSessionsQuery(),
+			getUserSettingsQuery()
+		])}
 
 		<!-- Active Sessions Card -->
 		<SettingsCard>
@@ -162,7 +162,7 @@
 									}),
 								onSuccess: async () => {
 									toast.success('All other sessions have been signed out');
-									await getActiveSessionsQuery();
+									await getActiveSessionsQuery().refresh();
 								},
 								resetOnSuccess: false
 							})}
@@ -237,7 +237,7 @@
 										{#if session.ipAddress}
 											{session.ipAddress} &bull;
 										{/if}
-										{formatDateTime(session.createdAt)}
+										{formatDateTime(session.createdAt, preferences)}
 									</div>
 								</div>
 							</div>
@@ -247,7 +247,7 @@
 									{...formHandler(revokeForm, {
 										onSuccess: async () => {
 											toast.success('Session revoked');
-											await getActiveSessionsQuery();
+											await getActiveSessionsQuery().refresh();
 										}
 									})}
 								>

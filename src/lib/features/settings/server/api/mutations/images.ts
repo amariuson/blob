@@ -59,6 +59,7 @@ async function resolveImageTarget(type: 'avatar' | 'org-logo') {
 			columns: { image: true }
 		});
 		return {
+			ownerId: session.user.id,
 			currentUrl: user?.image ?? null,
 			update: (url: string | null) =>
 				auth.api.updateUser({ headers: event.request.headers, body: { image: url } }),
@@ -73,6 +74,7 @@ async function resolveImageTarget(type: 'avatar' | 'org-logo') {
 		columns: { logo: true }
 	});
 	return {
+		ownerId: activeMember.organizationId,
 		currentUrl: org?.logo ?? null,
 		update: (url: string | null) =>
 			db
@@ -81,6 +83,13 @@ async function resolveImageTarget(type: 'avatar' | 'org-logo') {
 				.where(eq(schema.organization.id, activeMember.organizationId)),
 		label: 'logo'
 	};
+}
+
+function validateKeyOwnership(key: string, type: 'avatar' | 'org-logo', ownerId: string) {
+	const expectedPrefix = IMAGE_UPLOAD_PREFIXES[type];
+	if (!key.startsWith(`${expectedPrefix}${ownerId}/`)) {
+		error(403, { message: 'Invalid image key', code: 'FORBIDDEN' });
+	}
 }
 
 // ============================================================================
@@ -124,10 +133,12 @@ export async function prepareImageUpload(
  */
 export async function confirmImageUpload(data: z.infer<typeof confirmImageUploadSchema>) {
 	const target = await resolveImageTarget(data.type);
+	validateKeyOwnership(data.key, data.type, target.ownerId);
+
 	const publicUrl = getPublicUrl(data.key);
 
-	await deleteStoredImage(target.currentUrl, target.label);
 	await target.update(publicUrl);
+	await deleteStoredImage(target.currentUrl, target.label);
 
 	logger.info({ type: data.type, key: data.key }, 'Image upload confirmed');
 
@@ -140,8 +151,8 @@ export async function confirmImageUpload(data: z.infer<typeof confirmImageUpload
 export async function removeImage(data: z.infer<typeof removeImageSchema>) {
 	const target = await resolveImageTarget(data.type);
 
-	await deleteStoredImage(target.currentUrl, target.label);
 	await target.update(null);
+	await deleteStoredImage(target.currentUrl, target.label);
 
 	logger.info({ type: data.type }, 'Image removed');
 

@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { getRequestEvent } from '$app/server';
 import { env } from '$env/dynamic/public';
 
+import { rolesWithPermission } from '$features/auth';
 import { auth, getActiveMember, getSession } from '$features/auth/server';
 import { db } from '$lib/server/db';
 import * as schema from '$lib/server/db/schema';
@@ -13,12 +14,14 @@ import type {
 	BillingInfo,
 	InvitationInfo,
 	MemberInfo,
-	NotificationPreferences,
 	OrganizationSettings,
 	SessionInfo,
-	UserPreferences,
-	UserProfile
+	UserProfile,
+	UserSettings
 } from '../../types';
+
+const INVITATION_READ_ROLES = rolesWithPermission('invitation', 'read');
+const BILLING_READ_ROLES = rolesWithPermission('billing', 'read');
 
 function isCustomImage(imageUrl: string | null): boolean {
 	if (!imageUrl) return false;
@@ -68,13 +71,13 @@ export async function getUserProfile(): Promise<UserProfile> {
 }
 
 // ============================================================================
-// User Preferences Queries
+// User Settings Query
 // ============================================================================
 
 /**
- * Gets the current user's preferences, creating defaults if needed.
+ * Gets the current user's preferences and notification settings in a single query.
  */
-export async function getUserPreferences(): Promise<UserPreferences> {
+export async function getUserSettings(): Promise<UserSettings> {
 	const session = await getSession();
 
 	const prefs = await db.query.userPreferences.findFirst({
@@ -83,45 +86,34 @@ export async function getUserPreferences(): Promise<UserPreferences> {
 
 	if (!prefs) {
 		return {
-			language: 'en',
-			timezone: 'UTC',
-			dateFormat: 'MM/DD/YYYY',
-			timeFormat: '12h'
+			preferences: {
+				language: 'en',
+				timezone: 'UTC',
+				dateFormat: 'MM/DD/YYYY',
+				timeFormat: '12h'
+			},
+			notifications: {
+				emailNotifications: true,
+				marketingEmails: false,
+				securityAlerts: true,
+				productUpdates: true
+			}
 		};
 	}
 
 	return {
-		language: prefs.language,
-		timezone: prefs.timezone,
-		dateFormat: prefs.dateFormat,
-		timeFormat: prefs.timeFormat
-	};
-}
-
-/**
- * Gets the current user's notification preferences, creating defaults if needed.
- */
-export async function getNotificationPreferences(): Promise<NotificationPreferences> {
-	const session = await getSession();
-
-	const prefs = await db.query.userPreferences.findFirst({
-		where: eq(schema.userPreferences.userId, session.user.id)
-	});
-
-	if (!prefs) {
-		return {
-			emailNotifications: true,
-			marketingEmails: false,
-			securityAlerts: true,
-			productUpdates: true
-		};
-	}
-
-	return {
-		emailNotifications: prefs.emailNotifications,
-		marketingEmails: prefs.marketingEmails,
-		securityAlerts: prefs.securityAlerts,
-		productUpdates: prefs.productUpdates
+		preferences: {
+			language: prefs.language,
+			timezone: prefs.timezone,
+			dateFormat: prefs.dateFormat,
+			timeFormat: prefs.timeFormat
+		},
+		notifications: {
+			emailNotifications: prefs.emailNotifications,
+			marketingEmails: prefs.marketingEmails,
+			securityAlerts: prefs.securityAlerts,
+			productUpdates: prefs.productUpdates
+		}
 	};
 }
 
@@ -216,6 +208,10 @@ export async function getOrganizationMembers(): Promise<MemberInfo[]> {
 export async function getOrganizationInvitations(): Promise<InvitationInfo[]> {
 	const activeMember = await getActiveMember();
 
+	if (!INVITATION_READ_ROLES.includes(activeMember.role)) {
+		error(403, { message: 'You do not have permission to view invitations', code: 'FORBIDDEN' });
+	}
+
 	const invitations = await db.query.invitation.findMany({
 		where: and(
 			eq(schema.invitation.organizationId, activeMember.organizationId),
@@ -242,6 +238,13 @@ export async function getOrganizationInvitations(): Promise<InvitationInfo[]> {
  */
 export async function getBillingInfo(): Promise<BillingInfo> {
 	const activeMember = await getActiveMember();
+
+	if (!BILLING_READ_ROLES.includes(activeMember.role)) {
+		error(403, {
+			message: 'You do not have permission to view billing information',
+			code: 'FORBIDDEN'
+		});
+	}
 
 	const org = await db.query.organization.findFirst({
 		where: eq(schema.organization.id, activeMember.organizationId),

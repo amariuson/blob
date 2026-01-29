@@ -55,7 +55,7 @@
 					resetForm();
 					open = false;
 					toast.success('Invitation sent');
-					await getOrganizationInvitationsQuery();
+					await getOrganizationInvitationsQuery().refresh();
 				}
 			})}
 			class="space-y-4"

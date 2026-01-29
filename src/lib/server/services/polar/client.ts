@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { POLAR_ACCESS_TOKEN } from '$env/static/private';
+import { ORIGIN, POLAR_ACCESS_TOKEN } from '$env/static/private';
 import { PUBLIC_POLAR_PRO_ID } from '$env/static/public';
 
 import { isE2ETestMode } from '$lib/server/env.server';
@@ -34,5 +34,5 @@ export const polarClient: PolarAdapter = isE2ETestMode()
 	? createMockClient()
 	: createProductionClient(polarSdk, {
 			productId: PUBLIC_POLAR_PRO_ID,
-			checkoutSuccessUrl: '/settings/billing'
+			checkoutSuccessUrl: ORIGIN + '/settings/billing'
 		});

@@ -20,10 +20,9 @@ export {
 export {
 	getActiveSessions,
 	getBillingInfo,
-	getNotificationPreferences,
 	getOrganizationInvitations,
 	getOrganizationMembers,
 	getOrganizationSettings,
-	getUserPreferences,
-	getUserProfile
+	getUserProfile,
+	getUserSettings
 } from './api/queries';

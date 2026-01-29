@@ -2,6 +2,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import {
+		formatLongDate,
 		SettingsCard,
 		SettingsCardContent,
 		SettingsCardFooter,
@@ -24,7 +25,6 @@
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
 	import { getInitials } from '$lib/shared/utils';
 
-	import { format } from 'date-fns';
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import ImageIcon from '@lucide/svelte/icons/image';
@@ -32,10 +32,6 @@
 	import LoaderIcon from '@lucide/svelte/icons/loader';
 	import MailIcon from '@lucide/svelte/icons/mail';
 	import UserIcon from '@lucide/svelte/icons/user';
-
-	function formatLongDate(date: Date | string): string {
-		return format(new Date(date), 'MMMM d, yyyy');
-	}
 
 	// Image upload helpers bound to 'avatar' type
 	async function getAvatarUploadUrl(data: {
@@ -222,7 +218,7 @@
 					confirmUpload={confirmAvatarUpload}
 					removeImage={removeAvatar}
 					onSuccess={async () => {
-						await getUserProfileQuery();
+						await getUserProfileQuery().refresh();
 					}}
 				/>
 			</SettingsCardContent>

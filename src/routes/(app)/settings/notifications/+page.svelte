@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { NotificationsForm, SettingsCard, SettingsCardContent } from '$features/settings';
-	import { getNotificationPreferencesQuery } from '$features/settings/remote';
+	import { getUserSettingsQuery } from '$features/settings/remote';
 
 	import LoaderIcon from '@lucide/svelte/icons/loader';
 </script>
@@ -30,7 +30,7 @@
 			</SettingsCard>
 		{/snippet}
 
-		{@const preferences = await getNotificationPreferencesQuery()}
-		<NotificationsForm {preferences} />
+		{@const { notifications } = await getUserSettingsQuery()}
+		<NotificationsForm preferences={notifications} />
 	</svelte:boundary>
 </div>

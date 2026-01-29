@@ -23,9 +23,7 @@
 <SettingsCard>
 	<SettingsCardHeader
 		title="Members"
-		description="{members.length} {members.length === 1
-			? 'member'
-			: 'members'} in this organization"
+		description={`${members.length} ${members.length === 1 ? 'member' : 'members'} in this organization`}
 		icon={UsersIcon}
 		iconClass="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
 	>

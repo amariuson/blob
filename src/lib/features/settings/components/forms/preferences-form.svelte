@@ -32,8 +32,9 @@
 
 	let { preferences }: Props = $props();
 
-	// Local state for form fields - IIFE captures initial value
-	let formState = $state((() => ({ ...preferences }))());
+	// svelte-ignore state_referenced_locally
+	// Captures initial prop value as mutable form state
+	let formState = $state({ ...preferences });
 
 	// Theme is stored client-side via mode-watcher
 	const currentMode = $derived(mode.current ?? 'system');

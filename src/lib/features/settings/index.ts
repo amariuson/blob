@@ -29,25 +29,21 @@ export type {
 	ParsedUserAgent,
 	SessionInfo,
 	UserPreferences,
-	UserProfile
+	UserProfile,
+	UserSettings
 } from './types';
 
 // Constants
-export {
-	COMMON_TIMEZONES,
-	DATE_FORMATS,
-	IMAGE_UPLOAD_PREFIXES,
-	SUPPORTED_LANGUAGES,
-	TIME_FORMATS
-} from './constants';
+export { COMMON_TIMEZONES, DATE_FORMATS, SUPPORTED_LANGUAGES, TIME_FORMATS } from './constants';
 
 // Logic utilities
-export type { Country, CountryGroup, State } from './logic';
 export {
+	formatDate,
+	formatDateTime,
+	formatLongDate,
 	getProviderDisplayName,
 	getRoleBadgeVariant,
 	getRoleIcon,
-	isValidImageType,
 	parseUserAgent
 } from './logic';
 

@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { rolesWithPermission } from '$features/auth';
 	import { getActiveMemberQuery } from '$features/auth/remote';
 	import { SettingsCard, SettingsCardContent } from '$features/settings';
 	import {
 		getOrganizationInvitationsQuery,
 		getOrganizationMembersQuery,
-		getOrganizationSettingsQuery
+		getOrganizationSettingsQuery,
+		getUserSettingsQuery
 	} from '$features/settings/remote';
 
 	import LoaderIcon from '@lucide/svelte/icons/loader';
@@ -37,13 +39,16 @@
 			</SettingsCard>
 		{/snippet}
 
-		{@const [org, members, activeMember, invitations] = await Promise.all([
+		{@const [org, members, activeMember, { preferences }] = await Promise.all([
 			getOrganizationSettingsQuery(),
 			getOrganizationMembersQuery(),
 			getActiveMemberQuery(),
-			getOrganizationInvitationsQuery()
+			getUserSettingsQuery()
 		])}
+		{@const invitations = rolesWithPermission('invitation', 'read').includes(activeMember.role)
+			? await getOrganizationInvitationsQuery()
+			: []}
 
-		<Organization {org} {members} {activeMember} {invitations} />
+		<Organization {org} {members} {activeMember} {invitations} {preferences} />
 	</svelte:boundary>
 </div>

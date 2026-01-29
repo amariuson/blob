@@ -25,6 +25,11 @@ export interface NotificationPreferences {
 	productUpdates: boolean;
 }
 
+export interface UserSettings {
+	preferences: UserPreferences;
+	notifications: NotificationPreferences;
+}
+
 // View models — composed from multiple tables with computed fields
 export interface UserProfile {
 	id: string;

@@ -2,7 +2,46 @@
  * Pure transform functions for settings feature.
  */
 
-import type { ParsedUserAgent } from '../types';
+import { format } from 'date-fns';
+
+import type { ParsedUserAgent, UserPreferences } from '../types';
+
+// ============================================================================
+// Date Formatting
+// ============================================================================
+
+const DATE_FORMAT_MAP: Record<string, string> = {
+	'MM/DD/YYYY': 'MM/dd/yyyy',
+	'DD/MM/YYYY': 'dd/MM/yyyy',
+	'YYYY-MM-DD': 'yyyy-MM-dd',
+	'DD.MM.YYYY': 'dd.MM.yyyy'
+};
+
+const TIME_FORMAT_MAP: Record<string, string> = {
+	'12h': 'h:mm a',
+	'24h': 'HH:mm'
+};
+
+export function formatLongDate(date: Date | string): string {
+	return format(new Date(date), 'MMMM d, yyyy');
+}
+
+export function formatDateTime(
+	date: Date | string,
+	prefs?: Pick<UserPreferences, 'dateFormat' | 'timeFormat'>
+): string {
+	const dateFmt = (prefs?.dateFormat && DATE_FORMAT_MAP[prefs.dateFormat]) ?? 'MMM d, yyyy';
+	const timeFmt = (prefs?.timeFormat && TIME_FORMAT_MAP[prefs.timeFormat]) ?? 'h:mm a';
+	return format(new Date(date), `${dateFmt} ${timeFmt}`);
+}
+
+export function formatDate(
+	date: Date | string,
+	prefs?: Pick<UserPreferences, 'dateFormat'>
+): string {
+	const dateFmt = (prefs?.dateFormat && DATE_FORMAT_MAP[prefs.dateFormat]) ?? 'MMM d, yyyy';
+	return format(new Date(date), dateFmt);
+}
 
 // ============================================================================
 // User Agent Parsing
@@ -40,11 +79,11 @@ function detectOS(ua: string): string | null {
 	if (ua.includes('Windows NT 6.2')) return 'Windows 8';
 	if (ua.includes('Windows NT 6.1')) return 'Windows 7';
 	if (ua.includes('Windows')) return 'Windows';
-	if (ua.includes('Mac OS X')) return 'macOS';
 	if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+	if (ua.includes('Mac OS X')) return 'macOS';
 	if (ua.includes('Android')) return 'Android';
-	if (ua.includes('Linux')) return 'Linux';
 	if (ua.includes('CrOS')) return 'Chrome OS';
+	if (ua.includes('Linux')) return 'Linux';
 	return null;
 }
 

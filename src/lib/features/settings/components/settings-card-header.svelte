@@ -9,7 +9,6 @@
 		description?: string;
 		icon?: Component<{ class?: string }>;
 		iconClass?: string;
-		children?: Snippet;
 		action?: Snippet;
 		class?: string;
 	}
@@ -19,7 +18,6 @@
 		description,
 		icon: Icon,
 		iconClass,
-		children,
 		action,
 		class: className,
 		...restProps
@@ -45,8 +43,5 @@
 	</div>
 	{#if action}
 		{@render action()}
-	{/if}
-	{#if children}
-		{@render children()}
 	{/if}
 </div>

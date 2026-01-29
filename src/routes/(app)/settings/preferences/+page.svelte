@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { PreferencesForm, SettingsCard, SettingsCardContent } from '$features/settings';
-	import { getUserPreferencesQuery } from '$features/settings/remote';
+	import { getUserSettingsQuery } from '$features/settings/remote';
 
 	import LoaderIcon from '@lucide/svelte/icons/loader';
 </script>
@@ -30,7 +30,7 @@
 			</SettingsCard>
 		{/snippet}
 
-		{@const preferences = await getUserPreferencesQuery()}
+		{@const { preferences } = await getUserSettingsQuery()}
 		<PreferencesForm {preferences} />
 	</svelte:boundary>
 </div>

@@ -7,7 +7,7 @@ import * as schema from '$lib/server/db/schema';
 import { logger } from '$services/logger';
 import { polarClient } from '$services/polar';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import { HTTPValidationError } from '@polar-sh/sdk/models/errors/httpvalidationerror.js';
 
@@ -37,6 +37,18 @@ export async function updateOrganization(data: z.infer<typeof updateOrganization
 		});
 	}
 
+	// Pre-check slug uniqueness before syncing to Polar
+	const existingOrg = await db.query.organization.findFirst({
+		where: and(
+			eq(schema.organization.slug, data.slug),
+			ne(schema.organization.id, activeMember.organizationId)
+		),
+		columns: { id: true }
+	});
+	if (existingOrg) {
+		error(409, { message: 'This slug is already in use', code: 'CONFLICT' });
+	}
+
 	// Sync to Polar FIRST - if it rejects the data, don't save locally
 	try {
 		await polarClient.updateOrganizationCustomer(activeMember.organizationId, {
@@ -53,14 +65,21 @@ export async function updateOrganization(data: z.infer<typeof updateOrganization
 	}
 
 	// Only save locally if Polar accepted the data
-	await db
-		.update(schema.organization)
-		.set({
-			name: data.name,
-			slug: data.slug,
-			email: data.email || null
-		})
-		.where(eq(schema.organization.id, activeMember.organizationId));
+	try {
+		await db
+			.update(schema.organization)
+			.set({
+				name: data.name,
+				slug: data.slug,
+				email: data.email || null
+			})
+			.where(eq(schema.organization.id, activeMember.organizationId));
+	} catch (err) {
+		if (err instanceof Error && err.message.includes('unique')) {
+			error(409, { message: 'This slug is already in use', code: 'CONFLICT' });
+		}
+		throw err;
+	}
 
 	logger.info({ name: data.name, slug: data.slug }, 'Organization settings updated');
 

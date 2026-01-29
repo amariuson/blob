@@ -27,11 +27,13 @@
 
 	let { preferences }: Props = $props();
 
-	// Initialize form state from props - IIFE captures initial value
-	let formState = $state((() => ({ ...preferences }))());
+	// svelte-ignore state_referenced_locally
+	// Captures initial prop value as mutable form state
+	let formState = $state({ ...preferences });
 
-	// Track last saved values to detect unsaved changes
-	let savedValues = $state((() => ({ ...preferences }))());
+	// svelte-ignore state_referenced_locally
+	// Captures initial prop value to detect unsaved changes
+	let savedValues = $state({ ...preferences });
 
 	let hasChanges = $derived(
 		formState.emailNotifications !== savedValues.emailNotifications ||

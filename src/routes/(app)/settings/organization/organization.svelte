@@ -2,8 +2,14 @@
 	import { toast } from 'svelte-sonner';
 
 	import { type ActiveMember, rolesWithPermission } from '$features/auth';
-	import type { InvitationInfo, MemberInfo, OrganizationSettings } from '$features/settings';
+	import type {
+		InvitationInfo,
+		MemberInfo,
+		OrganizationSettings,
+		UserPreferences
+	} from '$features/settings';
 	import {
+		formatDate,
 		getRoleBadgeVariant,
 		getRoleIcon,
 		InviteMemberForm,
@@ -29,7 +35,6 @@
 	import { Label } from '$lib/shared/components/ui/label/index.js';
 	import { formHandler } from '$lib/shared/form/form-handler.svelte';
 
-	import { format } from 'date-fns';
 	import BadgeCheckIcon from '@lucide/svelte/icons/badge-check';
 	import BuildingIcon from '@lucide/svelte/icons/building';
 	import CheckIcon from '@lucide/svelte/icons/check';
@@ -41,9 +46,10 @@
 		members: MemberInfo[];
 		activeMember: NonNullable<ActiveMember>;
 		invitations: InvitationInfo[];
+		preferences: UserPreferences;
 	}
 
-	let { org, members, activeMember, invitations }: Props = $props();
+	let { org, members, activeMember, invitations, preferences }: Props = $props();
 
 	let inviteDialogOpen = $state(false);
 
@@ -51,10 +57,6 @@
 
 	const canManage = $derived(ORG_MANAGE_ROLES.includes(activeMember.role));
 	const RoleIcon = $derived(getRoleIcon(activeMember.role));
-
-	function formatDate(date: Date | string): string {
-		return format(new Date(date), 'MMM d, yyyy');
-	}
 
 	// Image upload helpers bound to 'org-logo' type
 	async function getOrgLogoUploadUrl(data: {
@@ -97,7 +99,7 @@
 				confirmUpload={confirmOrgLogoUpload}
 				removeImage={removeOrgLogo}
 				onSuccess={async () => {
-					await getOrganizationSettingsQuery();
+					await getOrganizationSettingsQuery().refresh();
 				}}
 			/>
 		</SettingsCardContent>
@@ -161,7 +163,7 @@
 			</SettingsCardContent>
 			<SettingsCardFooter class="justify-between">
 				<p class="text-sm text-muted-foreground">
-					Created {formatDate(org.createdAt)}
+					Created {formatDate(org.createdAt, preferences)}
 				</p>
 				<Button type="submit" size="sm" disabled={!!updateOrganizationForm.pending}>
 					{#if updateOrganizationForm.pending}
@@ -199,7 +201,7 @@
 					</div>
 					<div class="space-y-1">
 						<dt class="text-sm text-muted-foreground">Created</dt>
-						<dd class="text-sm">{formatDate(org.createdAt)}</dd>
+						<dd class="text-sm">{formatDate(org.createdAt, preferences)}</dd>
 					</div>
 				</dl>
 			</div>

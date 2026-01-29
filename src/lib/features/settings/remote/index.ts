@@ -33,12 +33,11 @@ import {
 import {
 	getActiveSessions,
 	getBillingInfo,
-	getNotificationPreferences,
 	getOrganizationInvitations,
 	getOrganizationMembers,
 	getOrganizationSettings,
-	getUserPreferences,
-	getUserProfile
+	getUserProfile,
+	getUserSettings
 } from '../server/api/queries';
 
 // ============================================================================
@@ -47,8 +46,7 @@ import {
 
 export const getUserProfileQuery = query(getUserProfile);
 
-export const getUserPreferencesQuery = query(getUserPreferences);
-export const getNotificationPreferencesQuery = query(getNotificationPreferences);
+export const getUserSettingsQuery = query(getUserSettings);
 
 export const getActiveSessionsQuery = query(getActiveSessions);
 

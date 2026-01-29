@@ -13,7 +13,7 @@
 	import SendIcon from '@lucide/svelte/icons/send';
 	import XIcon from '@lucide/svelte/icons/x';
 
-	import { cancelInvitationForm, getOrganizationInvitationsQuery } from '../remote/index.js';
+	import { cancelInvitationForm, getOrganizationInvitationsQuery } from '../remote';
 	import type { InvitationInfo } from '../types';
 	import { SettingsCard, SettingsCardContent, SettingsCardHeader } from './index.js';
 
@@ -67,7 +67,7 @@
 							{...formHandler(cancelForm, {
 								onSuccess: async () => {
 									toast.success('Invitation cancelled');
-									await getOrganizationInvitationsQuery();
+									await getOrganizationInvitationsQuery().refresh();
 								}
 							})}
 						>
