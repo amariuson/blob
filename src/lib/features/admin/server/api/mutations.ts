@@ -2,8 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { getRequestEvent } from '$app/server';
 
 // cross feature
-import { auth } from '$features/auth/server';
-import { getSession } from '$features/auth/server';
+import { auth, getSession } from '$features/auth/server';
 import { db } from '$lib/server/db';
 import type { AuditAction } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
