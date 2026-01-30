@@ -28,7 +28,7 @@ import { ac, roles } from '../config/access-control';
 import { TEST_OTP } from '../constants';
 import { validateInvitation } from '../logic/validation';
 import { createSessionStorage } from './adapters/session-storage';
-import { afterUserCreate, beforeUserCreate } from './api/hooks/database-hooks.server';
+import { afterUserCreate, beforeUserCreate } from './api/hooks/database';
 import { initializeOrganization, recordOrgDeletion } from './api/hooks/organization';
 import { clearMemberSessions } from './api/mutations/user';
 import { validateRoleChange } from './api/queries/organization';

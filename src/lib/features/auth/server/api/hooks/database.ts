@@ -2,8 +2,8 @@ import { sendWelcomeEmail } from '$services/email';
 
 import type { User } from 'better-auth';
 
-import { autoCreateOrganization } from '../hooks/organization';
 import { listUserInvitations } from '../queries/organization';
+import { autoCreateOrganization } from './organization';
 
 export async function beforeUserCreate(user: User) {
 	const name = user.name?.trim() || user.email.split('@')[0];
