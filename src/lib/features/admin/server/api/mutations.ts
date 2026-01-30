@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import { getRequestEvent } from '$app/server';
 
 // cross feature
-import { auth, getSession } from '$features/auth/server';
+import { getSession, impersonateUser, stopImpersonating } from '$features/auth/server';
 import { db } from '$lib/server/db';
 import type { AuditAction } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
@@ -61,10 +61,7 @@ export async function startImpersonation(userId: string) {
 	logger.info({ targetUserId: userId, targetEmail: targetUser?.email }, 'Starting impersonation');
 
 	try {
-		await auth.api.impersonateUser({
-			headers: event.request.headers,
-			body: { userId }
-		});
+		await impersonateUser(userId);
 	} catch (err) {
 		logger.error({ error: err, userId }, 'Better Auth impersonation failed');
 		throw err;
@@ -97,9 +94,7 @@ export async function stopImpersonation() {
 	logger.info({ impersonatorId, impersonatedUserId: session.user.id }, 'Stopping impersonation');
 
 	try {
-		await auth.api.stopImpersonating({
-			headers: event.request.headers
-		});
+		await stopImpersonating();
 	} catch (err) {
 		logger.error({ error: err, impersonatorId }, 'Better Auth stop impersonation failed');
 		throw err;

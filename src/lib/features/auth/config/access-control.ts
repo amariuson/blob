@@ -77,7 +77,7 @@ const roleConfig = {
 			member: ['read']
 		}
 	}
-} as const satisfies Record<string, { description: string; permissions: PermissionMap }>;
+} satisfies Record<string, { description: string; permissions: PermissionMap }>;
 
 export const roles = {
 	owner: ac.newRole(roleConfig.owner.permissions),
@@ -97,7 +97,7 @@ export const roleDefinitions: RoleDefinition[] = Object.entries(roleConfig).map(
 	([name, config]) => ({
 		name,
 		description: config.description,
-		permissions: config.permissions as PermissionMap
+		permissions: config.permissions
 	})
 );
 
