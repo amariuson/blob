@@ -2,21 +2,19 @@ import { error, invalid } from '@sveltejs/kit';
 import { form, query } from '$app/server';
 
 import { APIError } from 'better-auth';
-import z from 'zod';
+import { z } from 'zod';
 
 import {
-	sendEmailOTP,
+	createOrgOnboardingSchema,
+	invitationActionSchema,
 	sendEmailOTPSchema,
-	signInWithEmailOTP,
-	signInWithEmailOTPSchema,
-	signInWithGoogle
-} from '../server/api/mutations/auth';
+	signInWithEmailOTPSchema
+} from '../schemas';
+import { sendEmailOTP, signInWithEmailOTP, signInWithGoogle } from '../server/api/mutations/auth';
 import {
 	acceptInvitationOnboarding,
 	createOrganizationOnboarding,
-	createOrgOnboardingSchema,
-	declineInvitationOnboarding,
-	invitationActionSchema
+	declineInvitationOnboarding
 } from '../server/api/mutations/onboarding';
 import { signOutUser } from '../server/api/mutations/user';
 import { getUserInvitations } from '../server/api/queries/user';

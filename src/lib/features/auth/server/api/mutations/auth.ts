@@ -2,13 +2,10 @@ import { error, redirect } from '@sveltejs/kit';
 import { resolve } from '$app/paths';
 import { getRequestEvent } from '$app/server';
 
-import z from 'zod';
+import type { z } from 'zod';
 
+import { sendEmailOTPSchema, signInWithEmailOTPSchema } from '../../../schemas';
 import { auth } from '../../auth';
-
-export const sendEmailOTPSchema = z.object({
-	email: z.email()
-});
 
 export async function sendEmailOTP(data: z.infer<typeof sendEmailOTPSchema>) {
 	const { email } = data;
@@ -27,11 +24,6 @@ export async function sendEmailOTP(data: z.infer<typeof sendEmailOTPSchema>) {
 		});
 	}
 }
-
-export const signInWithEmailOTPSchema = z.object({
-	email: z.email(),
-	otp: z.string().length(8)
-});
 
 export async function signInWithEmailOTP(data: z.infer<typeof signInWithEmailOTPSchema>) {
 	const { email, otp } = data;

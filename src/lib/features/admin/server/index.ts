@@ -3,8 +3,5 @@ export {
 	getImpersonationStatus,
 	getUserForImpersonation,
 	guardSelfAction,
-	// schemas
-	orgSearchSchema,
-	requireSuperadmin,
-	userSearchSchema
+	requireSuperadmin
 } from './api/queries';

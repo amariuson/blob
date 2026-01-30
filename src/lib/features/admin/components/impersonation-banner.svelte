@@ -1,13 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import { Button } from '$lib/shared/components/ui/button/index.js';
-	import { formHandler } from '$lib/shared/form/form-handler.svelte';
-
 	import { ElementSize } from 'runed';
-	import Loader from '@lucide/svelte/icons/loader';
 
-	import { getImpersonationStatusQuery, stopImpersonationForm } from '../remote';
+	import { getImpersonationStatusQuery } from '../remote';
+	import StopImpersonationForm from './form/stop-impersonation-form.svelte';
 
 	let { children }: { children?: Snippet } = $props();
 
@@ -48,20 +45,7 @@
 					Viewing as <span class="font-bold">{status.viewingAs.name}</span>
 					({status.viewingAs.email})
 				</span>
-				<form {...formHandler(stopImpersonationForm)}>
-					<Button
-						type="submit"
-						size="sm"
-						variant="secondary"
-						class="h-7 bg-white text-red-700 hover:bg-red-50"
-						disabled={!!stopImpersonationForm.pending}
-					>
-						{#if !!stopImpersonationForm.pending}
-							<Loader class="mr-1 size-3 animate-spin" />
-						{/if}
-						Stop Impersonating
-					</Button>
-				</form>
+				<StopImpersonationForm />
 			</div>
 		</div>
 	</div>

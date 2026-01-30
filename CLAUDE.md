@@ -48,54 +48,128 @@ src/lib/
 └── shared/            # Client+server code (components, utils, types)
 ```
 
-## Feature Structure
+## Feature Structure (Scales with Complexity)
 
-**Three entry points:**
+**Three entry points (always required):**
 
 - `$features/name` → Client-safe public API (index.ts)
 - `$features/name/server` → Server-only public API
 - `$features/name/remote` → Remote functions
 
+### Invariant Rules (Never Change)
+
+1. **Three entry points**: `index.ts`, `remote/index.ts`, `server/index.ts`
+2. **All database operations in `server/api/`** - queries, mutations, functions
+3. **Remote functions only in `remote/`** - no schemas, no helpers
+4. **Server-only code only in `server/` or `remote/`**
+5. **Public APIs re-export, never expose internals**
+6. **Never pre-scaffold directories** - create folders only when adding files to them
+
+### Required Structure (Always)
+
 ```
 [feature]/
-├── index.ts                # Client-safe public API
-├── constants.ts            # Feature constants
-├── types.ts                # Feature types
-├── config/                 # Configuration (e.g., access-control.ts)
-├── logic/                  # Pure functions (validation, transforms)
-├── components/             # UI components
-│   └── forms/
-├── remote/                 # Remote functions ONLY
-│   └── index.ts
-└── server/                 # ALL server-only code
-    ├── index.ts            # Server-only public API
-    ├── [feature].ts        # Feature instance (optional)
-    ├── api/                # Business logic + Zod schemas
-    │   ├── queries/        # Data reads (or queries.ts if simple)
-    │   ├── mutations/      # Data writes (or mutations.ts if simple)
-    │   └── hooks/          # Library lifecycle hooks & callbacks (e.g., better-auth)
-    ├── adapters/           # External service adapters
-    ├── hooks/              # Database/ORM hooks (Drizzle)
-    ├── handles/            # SvelteKit handle creators
-    └── plugins/            # Library plugins (e.g., Polar)
+├── index.ts              # Client-safe public API (re-exports schemas, types, components)
+├── schemas.ts            # All Zod schemas (shared between client & server)
+├── remote/
+│   └── index.ts          # Remote functions only
+└── server/
+    ├── index.ts          # Server-only public API
+    └── api/              # ALL data operations live here
+        └── ...           # Structure scales (see below)
 ```
+
+### Optional (Add as needed)
+
+```
+├── constants.ts          # Feature constants
+├── types.ts              # TypeScript-only types (only if you have non-schema types)
+├── config/               # Static configuration (permissions, etc.)
+├── logic/                # Pure testable functions (validation, transforms, calculations)
+├── components/           # UI components
+├── server/adapters/      # External service adapters
+├── server/handles/       # SvelteKit handle creators
+└── server/plugins/       # Library plugins
+```
+
+### api/ Structure Scaling
+
+**Tiny (1-3 operations):** Single file
+
+```
+server/api/
+└── api.ts                # All queries + mutations in one file
+```
+
+**Small (4-8 operations):** Flat files
+
+```
+server/api/
+├── queries.ts
+├── mutations.ts
+├── database.hooks.ts     # Library callbacks use .hooks.ts suffix
+└── polar.hooks.ts
+```
+
+**Medium (4+ of same type):** Split into folders
+
+```
+server/api/
+├── queries/
+│   ├── user.ts
+│   └── posts.ts
+├── mutations/
+│   ├── user.ts
+│   └── posts.ts
+└── hooks/                # 4+ hooks → move to hooks/ folder
+    ├── database.ts
+    ├── organization.ts
+    ├── polar.ts          # Polar.sh webhook handlers
+    └── stripe.ts
+```
+
+**Note:** `server/plugins/polar.ts` (plugin factory) is separate from `api/polar.hooks.ts` (webhook handlers).
+
+**Large (15+ operations):** Split by entity
+
+```
+server/api/
+├── user/
+│   ├── queries.ts
+│   ├── mutations.ts
+│   └── hooks.ts
+└── posts/
+    ├── queries.ts
+    └── mutations.ts
+```
+
+**Note:** Schemas always live in feature root `schemas.ts`, not in api/.
 
 ## Folder Rules
 
-| Location            | Purpose                               | Can Import                                | Cannot Contain              |
-| ------------------- | ------------------------------------- | ----------------------------------------- | --------------------------- |
-| `index.ts`          | Client-safe public API                | `server/api/` schemas, `config/`, `types` | Business logic, server code |
-| `config/`           | Static config (permissions)           | Types only                                | Server code                 |
-| `logic/`            | Pure functions                        | Types only                                | Data ops, side effects      |
-| `components/`       | Svelte components                     | Feature exports, `$lib/shared/`           | Business logic              |
-| `remote/`           | `query()`, `form()`, `command()` only | `server/api/`, `$lib/server/`             | Schemas, helpers, logic     |
-| `server/index.ts`   | Server-only public API                | Everything in `server/`                   | Internal details            |
-| `server/api/`       | Business logic + Zod schemas          | `$lib/server/`, `logic/`                  | Remote functions            |
-| `server/api/hooks/` | Library lifecycle hooks & callbacks   | `api/`, `$lib/server/`                    | Database hooks              |
-| `server/adapters/`  | External service adapters             | `$lib/server/`                            | Data operations             |
-| `server/hooks/`     | Database/ORM hooks                    | `$lib/server/db`                          | Library hooks               |
-| `server/handles/`   | SvelteKit handle creators             | `api/`, `$lib/server/`                    | Business logic              |
-| `server/plugins/`   | Library plugins                       | `$lib/server/`, `api/`                    | Core business logic         |
+### Required Files
+
+| Location          | Purpose                                      | Can Import                          | Cannot Contain              |
+| ----------------- | -------------------------------------------- | ----------------------------------- | --------------------------- |
+| `index.ts`        | Client-safe public API                       | `schemas.ts`, `config/`, `types.ts` | Business logic, server code |
+| `schemas.ts`      | All Zod schemas (shared client & server)     | Types only                          | Business logic, data ops    |
+| `remote/index.ts` | `query()`, `form()`, `command()` only        | `server/api/`, `$lib/server/`       | Schemas, helpers, logic     |
+| `server/index.ts` | Server-only public API                       | Everything in `server/`             | Internal details            |
+| `server/api/`     | Business logic (queries, mutations, helpers) | `$lib/server/`, `logic/`, schemas   | Remote functions            |
+
+### Optional Files (Add as needed)
+
+| Location           | Purpose                                   | Can Import                      | Cannot Contain         |
+| ------------------ | ----------------------------------------- | ------------------------------- | ---------------------- |
+| `types.ts`         | TypeScript-only types (non-schema types)  | -                               | Business logic         |
+| `constants.ts`     | Feature constants                         | Types only                      | Logic, data ops        |
+| `config/`          | Static config (permissions)               | Types only                      | Server code            |
+| `logic/`           | Pure testable functions (no side effects) | Types only                      | Data ops, side effects |
+| `components/`      | Svelte components                         | Feature exports, `$lib/shared/` | Business logic         |
+| `*.hooks.ts`       | Library callbacks (better-auth, Polar)    | `api/`, `$lib/server/`          | -                      |
+| `server/adapters/` | External service adapters                 | `$lib/server/`                  | Data operations        |
+| `server/handles/`  | SvelteKit handle creators                 | `api/`, `$lib/server/`          | Business logic         |
+| `server/plugins/`  | Library plugins                           | `$lib/server/`, `api/`          | Core business logic    |
 
 **Note:** `remote/` and `server/` folders enforce server-only execution. No `.server.ts` suffix needed inside.
 
@@ -133,28 +207,33 @@ import { roles } from './config/access-control';
 ## API + Remote Pattern
 
 ```typescript
-// server/api/mutations/posts.ts - Business logic + schemas
+// schemas.ts - All Zod schemas (at feature root, shared between client & server)
+import { z } from 'zod';
 export const createPostSchema = z.object({ title: z.string(), content: z.string() });
+
+// server/api/mutations.ts - Business logic
+import { createPostSchema } from '../../schemas';
 export async function createPost(data: z.infer<typeof createPostSchema>) {
 	await db.insert(posts).values(data);
 	redirect(303, '/posts');
 }
 
-// server/api/queries/posts.ts
+// server/api/queries.ts
 export async function getPosts() {
 	return await db.query.posts.findMany();
 }
 
 // remote/index.ts - Thin wrappers ONLY
 import { query, form } from '$app/server';
-import { getPosts } from '../server/api/queries/posts';
-import { createPost, createPostSchema } from '../server/api/mutations/posts';
+import { getPosts } from '../server/api/queries';
+import { createPost } from '../server/api/mutations';
+import { createPostSchema } from '../schemas';
 
 export const getPostsQuery = query(getPosts);
 export const createPostForm = form(createPostSchema, createPost);
 
-// index.ts - Client-safe public API (components, types, schemas - NOT remote functions)
-export { createPostSchema } from './server/api/mutations/posts'; // Schemas for client-side validation
+// index.ts - Client-safe public API (schemas, types, components - NOT remote functions)
+export { createPostSchema } from './schemas'; // Schemas for client-side validation
 
 // server/index.ts - Server-only public API
 export { createPost, getPosts } from './api';
@@ -248,6 +327,16 @@ If you cannot use `formHandler` for a specific reason, explain why and ask the u
 
 - Use runes (`$state`, `$derived`, `$effect`)
 - Avoid `$effect` - prefer `$derived` for computed values, event handlers for actions
+- When initializing `$state` from props to create a mutable local copy (e.g., form state), use `// svelte-ignore state_referenced_locally` with a comment explaining intent:
+
+```svelte
+// svelte-ignore state_referenced_locally
+// Captures initial prop value as mutable form state
+let formState = $state({ ...preferences });
+```
+
+Do NOT use IIFEs or other workarounds. Only use `svelte-ignore` when the intent is to snapshot the initial prop value into non-reactive local state.
+
 - Use `let { children } = $props()` and `{@render children?.()}`
 - Forms in `components/forms/`
 - Prefer `await` expressions over `{#await}` blocks:
@@ -293,13 +382,14 @@ Add: `pnpm dlx shadcn-svelte@latest add <component>` → `src/lib/components/ui/
 10. Don't add `eslint-ignore`/`@ts-ignore` without asking
 11. Don't show success toast without checking `fields.allIssues().length`
 12. Don't use `throw new Error()` for expected errors - use `error()`
-13. Don't confuse `server/api/hooks/` (library) with `server/hooks/` (database)
-14. Don't put data operations outside `server/api/`
-15. Don't put server-only code outside `server/` or `remote/`
-16. Don't import services (`$services/`) directly in routes - use feature APIs
-17. Don't import from `$features/` in `$lib/shared/` or `$lib/server/` - they're lower level
-18. Don't use full paths - use `$features/` not `$lib/features/`, use `$services/` not `$lib/server/services/`
-19. Don't use raw `.enhance()` on remote forms - use `formHandler` instead
+13. Don't put data operations outside `server/api/`
+14. Don't put server-only code outside `server/` or `remote/`
+15. Don't import services (`$services/`) directly in routes - use feature APIs
+16. Don't import from `$features/` in `$lib/shared/` or `$lib/server/` - they're lower level
+17. Don't use full paths - use `$features/` not `$lib/features/`, use `$services/` not `$lib/server/services/`
+18. Don't use raw `.enhance()` on remote forms - use `formHandler` instead
+19. Don't pre-scaffold empty directories - create folders only when adding files
+20. Don't put Zod schemas in `server/api/` - keep them in `schemas.ts` at feature root
 
 # Testing
 

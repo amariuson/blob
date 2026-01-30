@@ -4,18 +4,11 @@ import { getRequestEvent } from '$app/server';
 import { generateSlug } from '$lib/shared/utils';
 import { logger } from '$services/logger';
 
-import z from 'zod';
+import type { z } from 'zod';
 
+import { createOrgOnboardingSchema, invitationActionSchema } from '../../../schemas';
 import { auth } from '../../auth';
 import { getSession } from '../queries/user';
-
-export const createOrgOnboardingSchema = z.object({
-	name: z.string().min(1, 'Organization name is required').max(100, 'Name is too long')
-});
-
-export const invitationActionSchema = z.object({
-	invitationId: z.string().min(1, 'Invitation ID is required')
-});
 
 /**
  * Creates an organization during onboarding.

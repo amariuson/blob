@@ -8,23 +8,6 @@ import * as schema from '$lib/server/db/schema';
 import { logger } from '$services/logger';
 
 import { eq } from 'drizzle-orm';
-import { z } from 'zod';
-
-// ============================================================================
-// Schemas
-// ============================================================================
-
-export const userSearchSchema = z.object({
-	query: z.string().optional(),
-	page: z.coerce.number().min(1).default(1),
-	limit: z.coerce.number().min(1).max(100).default(20)
-});
-
-export const orgSearchSchema = z.object({
-	query: z.string().optional(),
-	page: z.coerce.number().min(1).default(1),
-	limit: z.coerce.number().min(1).max(100).default(20)
-});
 
 // ============================================================================
 // User Queries

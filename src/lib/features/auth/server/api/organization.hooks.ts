@@ -8,7 +8,7 @@ import { polarClient } from '$services/polar';
 
 import { eq } from 'drizzle-orm';
 
-import { auth } from '../../auth';
+import { auth } from '../auth';
 
 export async function autoCreateOrganization(userId: string, userName: string): Promise<boolean> {
 	const orgName = `${userName}'s Organization`;
