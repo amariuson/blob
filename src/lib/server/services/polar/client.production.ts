@@ -1,6 +1,7 @@
 import type { Polar } from '@polar-sh/sdk';
-import type { PolarAdapter, PolarCustomer } from './adapter';
 import type { CustomerWithMembers } from '@polar-sh/sdk/models/components/customerwithmembers.js';
+
+import type { PolarAdapter, PolarCustomer } from './adapter';
 
 /**
  * Transforms SDK customer response to adapter format.

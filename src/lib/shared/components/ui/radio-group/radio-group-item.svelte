@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { cn, type WithoutChildrenOrChild } from '$lib/shared/utils.js';
+
 	import { RadioGroup as RadioGroupPrimitive } from 'bits-ui';
 	import CircleIcon from '@lucide/svelte/icons/circle';
-	import { cn, type WithoutChildrenOrChild } from '$lib/shared/utils.js';
 
 	let {
 		ref = $bindable(null),

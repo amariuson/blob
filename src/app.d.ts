@@ -1,4 +1,5 @@
-import type { RequestContext, ErrorCode } from '$lib/shared/types';
+import type { ActiveMember, Session } from '$features/auth';
+import type { ErrorCode, RequestContext } from '$lib/shared/types';
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
@@ -11,6 +12,10 @@ declare global {
 		}
 		interface Locals {
 			context: RequestContext;
+
+			// Lazy loading request cache
+			session?: Session | null;
+			activeMember?: ActiveMember | null;
 		}
 		// interface PageData {}
 		// interface PageState {}

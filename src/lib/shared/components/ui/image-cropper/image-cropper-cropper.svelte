@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Cropper from 'svelte-easy-crop';
+
 	import { useImageCropperCropper } from './image-cropper.svelte.js';
 	import type { ImageCropperCropperProps } from './types.js';
 

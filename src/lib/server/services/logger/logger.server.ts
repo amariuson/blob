@@ -1,8 +1,4 @@
-import pino from 'pino';
-import type { TransportSingleOptions } from 'pino';
-import { trace, context as otelContext } from '@opentelemetry/api';
 import { dev } from '$app/environment';
-import type { RequestContext } from '$lib/shared/types';
 import { getRequestEvent } from '$app/server';
 import {
 	GRAFANA_CLOUD_LOKI_HOST,
@@ -11,6 +7,12 @@ import {
 	NODE_ENV,
 	OTEL_SERVICE_NAME
 } from '$env/static/private';
+
+import type { RequestContext } from '$lib/shared/types';
+
+import type { TransportSingleOptions } from 'pino';
+import pino from 'pino';
+import { context as otelContext, trace } from '@opentelemetry/api';
 
 function buildTransport(): TransportSingleOptions | undefined {
 	if (dev) {

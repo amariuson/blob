@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { cn, type WithElementRef } from '$lib/shared/utils.js';
-	import { Skeleton } from '$lib/shared/components/ui/skeleton/index.js';
 	import type { HTMLAttributes } from 'svelte/elements';
+
+	import { Skeleton } from '$lib/shared/components/ui/skeleton/index.js';
+	import { cn, type WithElementRef } from '$lib/shared/utils.js';
 
 	let {
 		ref = $bindable(null),

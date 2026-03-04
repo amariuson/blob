@@ -1,9 +1,11 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '$env/dynamic/private';
+
+import { createLogger } from '$services/logger';
+import { setSpanAttributes, withSpan } from '$services/tracing';
+
 import { uuidv7 } from 'uuidv7';
-import { createLogger } from '$lib/server/services/logger';
-import { withSpan, setSpanAttributes } from '$lib/server/services/tracing';
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Module-specific logger for better observability
 const log = createLogger({ module: 'storage' });

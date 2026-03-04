@@ -1,6 +1,7 @@
 <script lang="ts" module>
-	import type { WithChildren, WithoutChildren } from 'bits-ui';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
+
+	import type { WithChildren, WithoutChildren } from 'bits-ui';
 	import type { VariantProps } from 'tailwind-variants';
 
 	export type ButtonVariant = VariantProps<typeof buttonVariants>['variant'];
@@ -37,7 +38,9 @@
 
 <script lang="ts">
 	import { cn } from '$lib/shared/utils.js';
+
 	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
+
 	import { buttonVariants } from '../button/index.js';
 
 	let {
@@ -70,19 +73,23 @@
 	tabindex={href && disabled ? -1 : tabindex}
 	class={cn(buttonVariants({ variant, size }), className)}
 	bind:this={ref}
-	onclick={async (
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		e: any
-	) => {
-		onclick?.(e);
+	onclick={async (e: MouseEvent) => {
+		// Call onclick with appropriate type based on element
+		if (href) {
+			(onclick as AnchorElementProps['onclick'])?.(
+				e as MouseEvent & { currentTarget: EventTarget & HTMLAnchorElement }
+			);
+		} else {
+			(onclick as ButtonElementProps['onclick'])?.(
+				e as MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }
+			);
+		}
 
 		if (type === undefined) return;
 
 		if (onClickPromise) {
 			loading = true;
-
-			await onClickPromise(e);
-
+			await onClickPromise(e as MouseEvent & { currentTarget: EventTarget & HTMLButtonElement });
 			loading = false;
 		}
 	}}

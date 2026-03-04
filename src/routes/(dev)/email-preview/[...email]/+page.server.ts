@@ -1,6 +1,7 @@
-import { emailList, createEmail, sendEmail } from 'better-svelte-email/preview';
-import Renderer from 'better-svelte-email/render';
 import { RESEND_API_KEY } from '$env/static/private';
+
+import { createEmail, emailList, sendEmail } from 'better-svelte-email/preview';
+import Renderer from 'better-svelte-email/render';
 
 const renderer = new Renderer();
 

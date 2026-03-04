@@ -22,12 +22,14 @@
 </script>
 
 <script lang="ts">
-	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
-	import NavLogo from './nav-logo.svelte';
-	import NavUser from './nav-user.svelte';
-	import NavMain from './nav-main.svelte';
 	import type { RemoteForm } from '@sveltejs/kit';
+
+	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
+
+	import NavLogo from './nav-logo.svelte';
+	import NavMain from './nav-main.svelte';
+	import NavUser from './nav-user.svelte';
 
 	let {
 		ref = $bindable(null),

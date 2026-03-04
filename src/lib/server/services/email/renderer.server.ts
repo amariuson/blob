@@ -1,5 +1,6 @@
-import Renderer, { toPlainText } from 'better-svelte-email/render';
 import type { Component, ComponentProps } from 'svelte';
+
+import Renderer, { toPlainText } from 'better-svelte-email/render';
 
 const renderer = new Renderer();
 

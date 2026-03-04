@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui';
 	import { buttonVariants } from '$lib/shared/components/ui/button/index.js';
 	import { cn } from '$lib/shared/utils.js';
+
+	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui';
 
 	let {
 		ref = $bindable(null),

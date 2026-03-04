@@ -1,13 +1,16 @@
-import { Polar } from '@polar-sh/sdk';
-import { instrumentPolar } from '@kubiks/otel-polar';
-import { POLAR_ACCESS_TOKEN } from '$env/static/private';
 import { env } from '$env/dynamic/private';
-import { z } from 'zod';
+import { POLAR_ACCESS_TOKEN } from '$env/static/private';
+import { PUBLIC_POLAR_PRO_ID } from '$env/static/public';
+
 import { isE2ETestMode } from '$lib/server/env.server';
+
+import { z } from 'zod';
+import { instrumentPolar } from '@kubiks/otel-polar';
+import { Polar } from '@polar-sh/sdk';
+
 import type { PolarAdapter } from './adapter';
 import { createMockClient } from './client.mock';
 import { createProductionClient } from './client.production';
-import { PUBLIC_POLAR_PRO_ID } from '$env/static/public';
 
 const polarServerSchema = z.enum(['sandbox', 'production']).catch('sandbox');
 

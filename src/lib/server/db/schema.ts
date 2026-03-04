@@ -1,17 +1,16 @@
 import { relations, sql } from 'drizzle-orm';
 import {
+	boolean,
+	index,
+	jsonb,
 	pgTable,
 	text,
 	timestamp,
-	boolean,
-	index,
 	uniqueIndex,
-	uuid,
-	jsonb,
-	pgEnum,
-	integer
+	uuid
 } from 'drizzle-orm/pg-core';
-import { uuidv7, entitlementsJsonb } from './utils';
+
+import { entitlementsJsonb, uuidv7 } from './utils';
 
 export const user = pgTable('user', {
 	id: uuidv7('id').primaryKey(),
@@ -292,150 +291,6 @@ export const auditLog = pgTable(
 export const auditLogRelations = relations(auditLog, ({ one }) => ({
 	actor: one(user, {
 		fields: [auditLog.actorId],
-		references: [user.id]
-	})
-}));
-
-// ============================================
-// Feature Flags
-// ============================================
-
-// Enums
-export const flagStatusEnum = pgEnum('flag_status', ['active', 'archived']);
-export const flagStateEnum = pgEnum('flag_state', ['targeting', 'kill_switch', 'enable_all']);
-
-// Feature flag history action types (only important actions)
-export type FeatureFlagHistoryAction =
-	| 'created'
-	| 'archived'
-	| 'restored'
-	| 'state_changed'
-	| 'grants_cleared'
-	| 'grant_added'
-	| 'grant_removed';
-
-// Flag state type
-export type FlagState = 'targeting' | 'kill_switch' | 'enable_all';
-
-// Feature flag definition
-export const featureFlag = pgTable(
-	'feature_flag',
-	{
-		id: uuidv7('id').primaryKey(),
-		key: text('key').notNull().unique(), // Unique identifier (e.g., 'new-dashboard')
-		name: text('name').notNull(), // Human-readable name
-		description: text('description'),
-
-		// Flag state - targeting uses percentage/grants, kill_switch is OFF for everyone, enable_all is ON for everyone
-		state: flagStateEnum('state').default('targeting').notNull(),
-		stateReason: text('state_reason'),
-
-		// Percentage rollout (0-100, null means grants-only)
-		percentage: integer('percentage'),
-
-		// Status and soft delete
-		status: flagStatusEnum('status').default('active').notNull(),
-		archivedAt: timestamp('archived_at'),
-		archivedBy: uuid('archived_by').references(() => user.id, { onDelete: 'set null' }),
-
-		// Timestamps
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at')
-			.defaultNow()
-			.$onUpdate(() => new Date())
-			.notNull(),
-		createdBy: uuid('created_by')
-			.notNull()
-			.references(() => user.id, { onDelete: 'set null' }),
-		updatedBy: uuid('updated_by').references(() => user.id, { onDelete: 'set null' })
-	},
-	(table) => [
-		index('feature_flag_status_idx').on(table.status),
-		index('feature_flag_key_idx').on(table.key),
-		index('feature_flag_name_idx').on(table.name)
-	]
-);
-
-// Organization-level access grants
-export const featureFlagGrant = pgTable(
-	'feature_flag_grant',
-	{
-		id: uuidv7('id').primaryKey(),
-		flagId: uuid('flag_id')
-			.notNull()
-			.references(() => featureFlag.id, { onDelete: 'cascade' }),
-
-		// Target organization
-		orgId: uuid('org_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
-
-		// Why this grant exists
-		reason: text('reason'),
-
-		// Timestamps
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		createdBy: uuid('created_by')
-			.notNull()
-			.references(() => user.id, { onDelete: 'set null' })
-	},
-	(table) => [
-		index('feature_flag_grant_flag_idx').on(table.flagId),
-		index('feature_flag_grant_org_idx').on(table.flagId, table.orgId),
-		// Ensure uniqueness per flag+org combination
-		uniqueIndex('feature_flag_grant_org_uidx').on(table.flagId, table.orgId)
-	]
-);
-
-// Change history for audit trail (simplified - only important actions)
-export const featureFlagHistory = pgTable(
-	'feature_flag_history',
-	{
-		id: uuidv7('id').primaryKey(),
-		flagId: uuid('flag_id')
-			.notNull()
-			.references(() => featureFlag.id, { onDelete: 'cascade' }),
-		action: text('action').$type<FeatureFlagHistoryAction>().notNull(),
-		description: text('description'),
-		actorId: uuid('actor_id')
-			.notNull()
-			.references(() => user.id, { onDelete: 'set null' }),
-		createdAt: timestamp('created_at').defaultNow().notNull()
-	},
-	(table) => [
-		index('feature_flag_history_flag_idx').on(table.flagId),
-		index('feature_flag_history_flag_created_idx').on(table.flagId, table.createdAt)
-	]
-);
-
-// Feature flag relations
-export const featureFlagRelations = relations(featureFlag, ({ many, one }) => ({
-	grants: many(featureFlagGrant),
-	history: many(featureFlagHistory),
-	creator: one(user, {
-		fields: [featureFlag.createdBy],
-		references: [user.id]
-	})
-}));
-
-export const featureFlagGrantRelations = relations(featureFlagGrant, ({ one }) => ({
-	flag: one(featureFlag, {
-		fields: [featureFlagGrant.flagId],
-		references: [featureFlag.id]
-	}),
-	organization: one(organization, {
-		fields: [featureFlagGrant.orgId],
-		references: [organization.id]
-	})
-}));
-
-export const featureFlagHistoryRelations = relations(featureFlagHistory, ({ one }) => ({
-	flag: one(featureFlag, {
-		fields: [featureFlagHistory.flagId],
-		references: [featureFlag.id]
-	}),
-	actor: one(user, {
-		fields: [featureFlagHistory.actorId],
 		references: [user.id]
 	})
 }));

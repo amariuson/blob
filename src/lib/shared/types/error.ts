@@ -8,7 +8,8 @@ export type ErrorCode =
 	| 'FORBIDDEN'
 	| 'NOT_FOUND'
 	| 'CONFLICT'
-	| 'INTERNAL';
+	| 'INTERNAL'
+	| 'TOO_MANY_REQUESTS';
 
 /**
  * HTTP status to error code mapping
@@ -18,7 +19,8 @@ export const ERROR_CODES: Record<number, ErrorCode> = {
 	401: 'UNAUTHORIZED',
 	403: 'FORBIDDEN',
 	404: 'NOT_FOUND',
-	409: 'CONFLICT'
+	409: 'CONFLICT',
+	429: 'TOO_MANY_REQUESTS'
 };
 
 /**

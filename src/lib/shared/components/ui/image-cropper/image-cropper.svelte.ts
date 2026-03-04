@@ -1,6 +1,8 @@
-import type { ReadableBoxedValues, WritableBoxedValues } from 'svelte-toolbelt';
-import { Context } from 'runed';
 import type { CropArea, DispatchEvents } from 'svelte-easy-crop';
+import type { ReadableBoxedValues, WritableBoxedValues } from 'svelte-toolbelt';
+
+import { Context } from 'runed';
+
 import { getCroppedImg } from './utils';
 
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#supported_image_formats

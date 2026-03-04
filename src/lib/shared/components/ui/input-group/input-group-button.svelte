@@ -20,9 +20,10 @@
 </script>
 
 <script lang="ts">
-	import { cn } from '$lib/shared/utils.js';
 	import type { ComponentProps } from 'svelte';
+
 	import { Button } from '$lib/shared/components/ui/button/index.js';
+	import { cn } from '$lib/shared/utils.js';
 
 	let {
 		ref = $bindable(null),

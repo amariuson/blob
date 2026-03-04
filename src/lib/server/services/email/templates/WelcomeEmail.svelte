@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Section, Text, Button, Heading } from 'better-svelte-email';
+	import { Button, Heading, Section, Text } from 'better-svelte-email';
+
 	import BaseLayout from '../components/BaseLayout.svelte';
 
 	let { userName = 'there' }: { userName?: string } = $props();

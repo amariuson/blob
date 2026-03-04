@@ -1,4 +1,4 @@
-import { trace, SpanStatusCode, type Span, type Attributes } from '@opentelemetry/api';
+import { type Attributes, type Span, SpanStatusCode, trace } from '@opentelemetry/api';
 
 const tracer = trace.getTracer('blob-app');
 

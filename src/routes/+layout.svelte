@@ -1,7 +1,9 @@
 <script lang="ts">
-	import './layout.css';
 	import { Toaster } from '$lib/shared/components/ui/sonner';
+
 	import { ModeWatcher } from 'mode-watcher';
+
+	import './layout.css';
 
 	let { children } = $props();
 </script>

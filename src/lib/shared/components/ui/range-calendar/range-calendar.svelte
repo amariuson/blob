@@ -1,10 +1,13 @@
 <script lang="ts">
-	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui';
-	import * as RangeCalendar from './index.js';
-	import { cn, type WithoutChildrenOrChild } from '$lib/shared/utils.js';
-	import type { ButtonVariant } from '$lib/shared/components/ui/button/index.js';
 	import type { Snippet } from 'svelte';
-	import { isEqualMonth, type DateValue } from '@internationalized/date';
+
+	import type { ButtonVariant } from '$lib/shared/components/ui/button/index.js';
+	import { cn, type WithoutChildrenOrChild } from '$lib/shared/utils.js';
+
+	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui';
+	import { type DateValue, isEqualMonth } from '@internationalized/date';
+
+	import * as RangeCalendar from './index.js';
 
 	let {
 		ref = $bindable(null),

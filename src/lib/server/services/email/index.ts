@@ -1,9 +1,9 @@
 export { sendEmail } from './email.server';
-export { renderEmail } from './renderer.server';
 export {
-	sendOtpVerificationEmail,
-	sendOrganizationInvitationEmail,
-	sendWelcomeEmail,
 	sendMemberRemovedEmail,
-	sendRoleChangedEmail
+	sendOrganizationInvitationEmail,
+	sendOtpVerificationEmail,
+	sendRoleChangedEmail,
+	sendWelcomeEmail
 } from './emails.server';
+export { renderEmail } from './renderer.server';

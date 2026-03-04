@@ -1,7 +1,8 @@
 <script lang="ts">
-	import Button, { type ButtonElementProps } from './image-cropper-button.svelte';
-	import { useImageCropperCrop } from './image-cropper.svelte.js';
 	import CropIcon from '@lucide/svelte/icons/crop';
+
+	import { useImageCropperCrop } from './image-cropper.svelte.js';
+	import Button, { type ButtonElementProps } from './image-cropper-button.svelte';
 
 	let {
 		ref = $bindable(null),

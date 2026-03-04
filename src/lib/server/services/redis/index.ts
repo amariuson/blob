@@ -1,1 +1,1 @@
-export { redisClient, checkRedisHealth } from './redis.server';
+export { checkRedisHealth, redisClient } from './redis.server';
