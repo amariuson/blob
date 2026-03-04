@@ -3,7 +3,8 @@ import {
 	type RowData,
 	type TableOptions,
 	type TableOptionsResolved,
-	type TableState
+	type TableState,
+	type Updater
 } from '@tanstack/table-core';
 
 /**
@@ -13,21 +14,21 @@ import {
  * @example
  * ```svelte
  * <script>
- *   const table = createSvelteTable({ ... })
+ * const table = createSvelteTable({ ... })
  * </script>
  *
  * <table>
- *   <thead>
- *     {#each table.getHeaderGroups() as headerGroup}
- *       <tr>
- *         {#each headerGroup.headers as header}
- *           <th colspan={header.colSpan}>
- *         	   <FlexRender content={header.column.columnDef.header} context={header.getContext()} />
- *         	 </th>
- *         {/each}
- *       </tr>
- *     {/each}
- *   </thead>
+ * <thead>
+ * {#each table.getHeaderGroups() as headerGroup}
+ * <tr>
+ * {#each headerGroup.headers as header}
+ * <th colspan={header.colSpan}>
+ * 	 <FlexRender content={header.column.columnDef.header} context={header.getContext()} />
+ * 	 </th>
+ * {/each}
+ * </tr>
+ * {/each}
+ * </thead>
  * 	 <!-- ... -->
  * </table>
  * ```
@@ -49,15 +50,14 @@ export function createSvelteTable<TData extends RowData>(options: TableOptions<T
 	);
 
 	const table = createTable(resolvedOptions);
-	let state = $state<Partial<TableState>>(table.initialState);
+	let state = $state<TableState>(table.initialState);
 
 	function updateOptions() {
-		table.setOptions((prev) => {
-			return mergeObjects(prev, options, {
+		table.setOptions(() => {
+			return mergeObjects(resolvedOptions, options, {
 				state: mergeObjects(state, options.state || {}),
 
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				onStateChange: (updater: any) => {
+				onStateChange: (updater: Updater<TableState>) => {
 					if (updater instanceof Function) state = updater(state);
 					else state = mergeObjects(state, updater);
 

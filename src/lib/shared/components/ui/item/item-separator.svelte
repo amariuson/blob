@@ -15,6 +15,6 @@
 	bind:ref
 	data-slot="item-separator"
 	orientation="horizontal"
-	class={cn('my-0', className)}
+	class={cn('my-2', className)}
 	{...restProps}
 />

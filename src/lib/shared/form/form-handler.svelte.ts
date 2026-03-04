@@ -116,7 +116,6 @@ export function formHandler<Input, Output>(
 			});
 		} catch (err) {
 			if (isRedirect(err)) {
-				// eslint-disable-next-line svelte/no-navigation-without-resolve
 				goto(err.location, { invalidateAll: true });
 				return;
 			}

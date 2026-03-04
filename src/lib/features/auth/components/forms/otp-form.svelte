@@ -88,6 +88,7 @@
 	<Button
 		class="w-full"
 		type="button"
+		size="lg"
 		variant="outline"
 		disabled={!!signInWithEmailOTPForm.pending}
 		onclick={goBack}

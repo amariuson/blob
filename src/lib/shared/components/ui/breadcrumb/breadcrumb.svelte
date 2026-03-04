@@ -2,6 +2,7 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 
 	import type { WithElementRef } from '$lib/shared/utils.js';
+	import { cn } from '$lib/shared/utils.js';
 
 	let {
 		ref = $bindable(null),
@@ -14,8 +15,8 @@
 <nav
 	bind:this={ref}
 	data-slot="breadcrumb"
-	class={className}
 	aria-label="breadcrumb"
+	class={cn('', className)}
 	{...restProps}
 >
 	{@render children?.()}

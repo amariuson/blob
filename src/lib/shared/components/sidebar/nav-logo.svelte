@@ -5,9 +5,7 @@
 	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
 </script>
 
-<Sidebar.MenuButton
-	class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
->
+<Sidebar.MenuButton>
 	{#snippet child({ props })}
 		<a href={resolve('/')} {...props}>
 			<img src={`${PUBLIC_STATIC_URL}/logo.png`} alt="Bits Logo" class="size-4" />

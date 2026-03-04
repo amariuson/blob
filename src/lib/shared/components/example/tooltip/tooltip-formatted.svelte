@@ -1,0 +1,22 @@
+<script lang="ts">
+	import { Button } from '$lib/shared/components/ui/button/index.js';
+	import * as Tooltip from '$lib/shared/components/ui/tooltip/index.js';
+
+	import Example from '../example.svelte';
+</script>
+
+<Example title="Formatted Content">
+	<Tooltip.Root>
+		<Tooltip.Trigger>
+			{#snippet child({ props })}
+				<Button variant="outline" class="w-fit" {...props}>Status</Button>
+			{/snippet}
+		</Tooltip.Trigger>
+		<Tooltip.Content>
+			<div class="flex flex-col gap-1">
+				<p class="font-semibold">Active</p>
+				<p class="text-xs opacity-80">Last updated 2 hours ago</p>
+			</div>
+		</Tooltip.Content>
+	</Tooltip.Root>
+</Example>

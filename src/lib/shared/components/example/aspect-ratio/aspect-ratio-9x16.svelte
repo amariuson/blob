@@ -1,0 +1,15 @@
+<script lang="ts">
+	import { AspectRatio } from '$lib/shared/components/ui/aspect-ratio/index.js';
+
+	import Example from '../example.svelte';
+</script>
+
+<Example title="9:16" class="items-center justify-center">
+	<AspectRatio ratio={9 / 16} class="rounded-lg bg-muted">
+		<img
+			src="https://avatar.vercel.sh/shadcn1"
+			alt="shadcn1"
+			class="h-full w-full rounded-lg object-cover grayscale dark:brightness-20"
+		/>
+	</AspectRatio>
+</Example>

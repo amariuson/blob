@@ -1,0 +1,10 @@
+<script lang="ts">
+	import ExampleWrapper from '../example-wrapper.svelte';
+	import SonnerBasic from './sonner-basic.svelte';
+	import SonnerWithDescription from './sonner-with-description.svelte';
+</script>
+
+<ExampleWrapper>
+	<SonnerBasic />
+	<SonnerWithDescription />
+</ExampleWrapper>

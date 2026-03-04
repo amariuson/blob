@@ -14,7 +14,7 @@ export {
 	Item,
 	Link,
 	Next,
-	NextButton, //old
+	NextButton, // old
 	//
 	Root as Pagination,
 	Content as PaginationContent,
@@ -22,10 +22,10 @@ export {
 	Item as PaginationItem,
 	Link as PaginationLink,
 	Next as PaginationNext,
-	NextButton as PaginationNextButton, //old
-	PrevButton as PaginationPrevButton, //old
+	NextButton as PaginationNextButton, // old
+	PrevButton as PaginationPrevButton, // old
 	Previous as PaginationPrevious,
-	PrevButton, //old
+	PrevButton, // old
 	Previous,
 	Root
 };

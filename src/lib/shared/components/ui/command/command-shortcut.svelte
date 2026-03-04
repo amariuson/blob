@@ -14,7 +14,10 @@
 <span
 	bind:this={ref}
 	data-slot="command-shortcut"
-	class={cn('ms-auto text-xs tracking-widest text-muted-foreground', className)}
+	class={cn(
+		'ml-auto text-xs tracking-widest text-muted-foreground group-aria-selected/command-item:text-foreground',
+		className
+	)}
 	{...restProps}
 >
 	{@render children?.()}

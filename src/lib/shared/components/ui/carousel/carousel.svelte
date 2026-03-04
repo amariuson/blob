@@ -19,22 +19,17 @@
 		...restProps
 	}: WithElementRef<CarouselProps> = $props();
 
+	// svelte-ignore state_referenced_locally
 	let carouselState = $state<EmblaContext>({
 		api: undefined,
 		scrollPrev,
 		scrollNext,
-		get orientation() {
-			return orientation;
-		},
+		orientation,
 		canScrollNext: false,
 		canScrollPrev: false,
 		handleKeyDown,
-		get options() {
-			return opts;
-		},
-		get plugins() {
-			return plugins;
-		},
+		options: opts,
+		plugins,
 		onInit,
 		scrollSnaps: [],
 		selectedIndex: 0,

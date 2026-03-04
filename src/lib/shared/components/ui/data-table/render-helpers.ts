@@ -11,8 +11,8 @@ import type { Component, ComponentProps, Snippet } from 'svelte';
  * ```svelte
  * {@const result = content(context as any)}
  * {#if result instanceof RenderComponentConfig}
- *   {@const { component: Component, props } = result}
- *   <Component {...props} />
+ * {@const { component: Component, props } = result}
+ * <Component {...props} />
  * {/if}
  * ```
  */
@@ -38,8 +38,8 @@ export class RenderComponentConfig<TComponent extends Component> {
  * ```svelte
  * {@const result = content(context as any)}
  * {#if result instanceof RenderSnippetConfig}
- *   {@const { snippet, params } = result}
- *   {@render snippet(params)}
+ * {@const { snippet, params } = result}
+ * {@render snippet(params)}
  * {/if}
  * ```
  */
@@ -64,12 +64,12 @@ export class RenderSnippetConfig<TProps> {
  * ```ts
  * // +page.svelte
  * const defaultColumns = [
- *   columnHelper.accessor('name', {
- *     header: header => renderComponent(SortHeader, { label: 'Name', header }),
- *   }),
- *   columnHelper.accessor('state', {
- *     header: header => renderComponent(SortHeader, { label: 'State', header }),
- *   }),
+ * columnHelper.accessor('name', {
+ * header: header => renderComponent(SortHeader, { label: 'Name', header }),
+ * }),
+ * columnHelper.accessor('state', {
+ * header: header => renderComponent(SortHeader, { label: 'State', header }),
+ * }),
  * ]
  * ```
  * @see {@link https://tanstack.com/table/latest/docs/guide/column-defs}
@@ -96,12 +96,12 @@ export function renderComponent<
  * ```ts
  * // +page.svelte
  * const defaultColumns = [
- *   columnHelper.accessor('name', {
- *     cell: cell => renderSnippet(nameSnippet, { name: cell.row.name }),
- *   }),
- *   columnHelper.accessor('state', {
- *     cell: cell => renderSnippet(stateSnippet, { state: cell.row.state }),
- *   }),
+ * columnHelper.accessor('name', {
+ * cell: cell => renderSnippet(nameSnippet, { name: cell.row.name }),
+ * }),
+ * columnHelper.accessor('state', {
+ * cell: cell => renderSnippet(stateSnippet, { state: cell.row.state }),
+ * }),
  * ]
  * ```
  * @see {@link https://tanstack.com/table/latest/docs/guide/column-defs}

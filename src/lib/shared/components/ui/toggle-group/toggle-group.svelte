@@ -9,6 +9,7 @@
 
 	interface ToggleGroupContext extends ToggleVariants {
 		spacing?: number;
+		orientation?: 'horizontal' | 'vertical';
 	}
 
 	export function setToggleGroupCtx(props: ToggleGroupContext) {
@@ -31,9 +32,14 @@
 		class: className,
 		size = 'default',
 		spacing = 0,
+		orientation = 'horizontal',
 		variant = 'default',
 		...restProps
-	}: ToggleGroupPrimitive.RootProps & ToggleVariants & { spacing?: number } = $props();
+	}: ToggleGroupPrimitive.RootProps &
+		ToggleVariants & {
+			spacing?: number;
+			orientation?: 'horizontal' | 'vertical';
+		} = $props();
 
 	setToggleGroupCtx({
 		get variant() {
@@ -44,6 +50,9 @@
 		},
 		get spacing() {
 			return spacing;
+		},
+		get orientation() {
+			return orientation;
 		}
 	});
 </script>
@@ -59,9 +68,10 @@ get along, so we shut typescript up by casting `value` to `never`.
 	data-variant={variant}
 	data-size={size}
 	data-spacing={spacing}
+	data-orientation={orientation}
 	style={`--gap: ${spacing}`}
 	class={cn(
-		'group/toggle-group flex w-fit items-center gap-[--spacing(var(--gap))] rounded-md data-[spacing=default]:data-[variant=outline]:shadow-xs',
+		'group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[size=sm]:rounded-[min(var(--radius-md),10px)]',
 		className
 	)}
 	{...restProps}

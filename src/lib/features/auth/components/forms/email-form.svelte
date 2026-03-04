@@ -31,7 +31,7 @@
 			{/each}
 		</div>
 	</div>
-	<Button class="w-full" type="submit" disabled={!!sendEmailOTPForm.pending}>
+	<Button class="w-full" type="submit" size="lg" disabled={!!sendEmailOTPForm.pending}>
 		{#if !!sendEmailOTPForm.pending}
 			<Spinner class="mr-2" />
 		{/if}

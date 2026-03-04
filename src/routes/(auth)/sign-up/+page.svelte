@@ -8,7 +8,7 @@
 	{#snippet below()}
 		<p class="text-center text-sm text-accent-foreground">
 			Have an account ?
-			<Button variant="link" class="px-2" href="/sign-in">Sign in</Button>
+			<Button variant="link" class="px-2" size="lg" href="/sign-in">Sign in</Button>
 		</p>
 	{/snippet}
 </Layout>

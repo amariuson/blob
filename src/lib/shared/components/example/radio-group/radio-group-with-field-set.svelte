@@ -1,0 +1,27 @@
+<script lang="ts">
+	import * as Field from '$lib/shared/components/ui/field/index.js';
+	import * as RadioGroup from '$lib/shared/components/ui/radio-group/index.js';
+
+	import Example from '../example.svelte';
+</script>
+
+<Example title="With FieldSet">
+	<Field.Set>
+		<Field.Legend>Battery Level</Field.Legend>
+		<Field.Description>Choose your preferred battery level.</Field.Description>
+		<RadioGroup.Root value="medium">
+			<Field.Field orientation="horizontal">
+				<RadioGroup.Item value="high" id="battery-high" />
+				<Field.Label for="battery-high" class="font-normal">High</Field.Label>
+			</Field.Field>
+			<Field.Field orientation="horizontal">
+				<RadioGroup.Item value="medium" id="battery-medium" />
+				<Field.Label for="battery-medium" class="font-normal">Medium</Field.Label>
+			</Field.Field>
+			<Field.Field orientation="horizontal">
+				<RadioGroup.Item value="low" id="battery-low" />
+				<Field.Label for="battery-low" class="font-normal">Low</Field.Label>
+			</Field.Field>
+		</RadioGroup.Root>
+	</Field.Set>
+</Example>
