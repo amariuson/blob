@@ -30,11 +30,11 @@
 			<header
 				class="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-2 group-data-[active=true]/banner:static"
 			>
-				<div class="flex h-8 items-center gap-2 px-4">
-					<Sidebar.Trigger class="-ml-1" />
+				<div class="flex h-8 items-center gap-2 px-1">
+					<Sidebar.Trigger />
 				</div>
 			</header>
-			<div class="flex flex-1 flex-col gap-4 p-4 pt-0">
+			<div class="flex flex-1 flex-col gap-4">
 				{@render children()}
 			</div>
 		</Sidebar.Inset>
