@@ -368,6 +368,8 @@ NEVER run - ask user: `pnpm create svelte`, `pnpm dlx shadcn-svelte@latest init`
 
 Add: `pnpm dlx shadcn-svelte@latest add <component>` → `src/lib/components/ui/`
 
+**Component showcase:** `src/routes/(dev)/components/+page.svelte` contains examples of how components are used in this project. When building UI, read this file first to understand the preferred styling patterns and component usage. Match the approach used there.
+
 # Common Pitfalls
 
 1. Don't run interactive commands - ask user
