@@ -1,0 +1,20 @@
+{
+	"$schema": "https://shadcn-svelte.com/schema.json",
+	"tailwind": {
+		"css": "src/routes/layout.css",
+		"baseColor": "zinc"
+	},
+	"aliases": {
+		"components": "$lib/shared/components",
+		"utils": "$lib/shared/utils",
+		"ui": "$lib/shared/components/ui",
+		"hooks": "$lib/shared/hooks",
+		"lib": "$lib"
+	},
+	"typescript": true,
+	"registry": "https://shadcn-svelte.com/registry",
+	"style": "nova",
+	"iconLibrary": "tabler",
+	"menuColor": "default",
+	"menuAccent": "subtle"
+}
