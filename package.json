@@ -64,5 +64,10 @@
 		"typescript-eslint": "^8.58.1",
 		"vaul-svelte": "1.0.0-next.7",
 		"vite": "^8.0.7"
+	},
+	"pnpm": {
+		"patchedDependencies": {
+			"@sveltejs/kit": "patches/@sveltejs__kit.patch"
+		}
 	}
 }
