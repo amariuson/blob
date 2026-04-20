@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { HTMLOptionAttributes } from "svelte/elements";
-	import type { WithElementRef } from "$lib/shared/utils.js";
+	import type { HTMLOptionAttributes } from 'svelte/elements';
+	import type { WithElementRef } from '$lib/shared/utils.js';
 
 	let {
 		ref = $bindable(null),

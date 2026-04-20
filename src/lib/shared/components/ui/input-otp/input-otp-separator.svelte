@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { HTMLAttributes } from "svelte/elements";
-	import type { WithElementRef } from "$lib/shared/utils.js";
-	import { cn } from "$lib/shared/utils.js";
+	import type { HTMLAttributes } from 'svelte/elements';
+	import type { WithElementRef } from '$lib/shared/utils.js';
+	import { cn } from '$lib/shared/utils.js';
 	import { IconMinus } from '@tabler/icons-svelte';
 
 	let {
@@ -16,12 +16,12 @@
 	bind:this={ref}
 	data-slot="input-otp-separator"
 	role="separator"
-	class={cn("[&_svg:not([class*='size-'])]:size-4 flex items-center", className)}
+	class={cn("flex items-center [&_svg:not([class*='size-'])]:size-4", className)}
 	{...restProps}
 >
 	{#if children}
 		{@render children?.()}
 	{:else}
-		<IconMinus  />
+		<IconMinus />
 	{/if}
 </div>

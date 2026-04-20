@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { HTMLAttributes } from "svelte/elements";
-	import { cn, type WithElementRef, type WithoutChildren } from "$lib/shared/utils.js";
+	import type { HTMLAttributes } from 'svelte/elements';
+	import { cn, type WithElementRef, type WithoutChildren } from '$lib/shared/utils.js';
 	import { IconDots } from '@tabler/icons-svelte';
 
 	let {
@@ -14,9 +14,12 @@
 	bind:this={ref}
 	aria-hidden="true"
 	data-slot="pagination-ellipsis"
-	class={cn("size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4 flex items-center justify-center", className)}
+	class={cn(
+		"flex size-8 items-center items-center justify-center justify-center [&_svg:not([class*='size-'])]:size-4",
+		className
+	)}
 	{...restProps}
 >
-	<IconDots  />
+	<IconDots />
 	<span class="sr-only">More pages</span>
 </span>

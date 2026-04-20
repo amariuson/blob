@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { cn, type WithElementRef } from "$lib/shared/utils.js";
-	import type { HTMLLiAttributes } from "svelte/elements";
+	import { cn, type WithElementRef } from '$lib/shared/utils.js';
+	import type { HTMLLiAttributes } from 'svelte/elements';
 	import { IconChevronRight } from '@tabler/icons-svelte';
 
 	let {
@@ -16,12 +16,12 @@
 	data-slot="breadcrumb-separator"
 	role="presentation"
 	aria-hidden="true"
-	class={cn("[&>svg]:size-3.5", className)}
+	class={cn('[&>svg]:size-3.5', className)}
 	{...restProps}
 >
 	{#if children}
 		{@render children?.()}
 	{:else}
-		<IconChevronRight  />
+		<IconChevronRight />
 	{/if}
 </li>

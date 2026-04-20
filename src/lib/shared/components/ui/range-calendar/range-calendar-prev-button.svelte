@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { RangeCalendar as RangeCalendarPrimitive } from "bits-ui";
+	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui';
 	import { IconChevronLeft } from '@tabler/icons-svelte';
-	import { buttonVariants, type ButtonVariant } from "$lib/shared/components/ui/button/index.js";
-	import { cn } from "$lib/shared/utils.js";
+	import { buttonVariants, type ButtonVariant } from '$lib/shared/components/ui/button/index.js';
+	import { cn } from '$lib/shared/utils.js';
 
 	let {
 		ref = $bindable(null),
 		class: className,
 		children,
-		variant = "ghost",
+		variant = 'ghost',
 		...restProps
 	}: RangeCalendarPrimitive.PrevButtonProps & {
 		variant?: ButtonVariant;
@@ -16,14 +16,14 @@
 </script>
 
 {#snippet Fallback()}
-	<IconChevronLeft class={cn("size-4", className)} />
+	<IconChevronLeft class={cn('size-4', className)} />
 {/snippet}
 
 <RangeCalendarPrimitive.PrevButton
 	bind:ref
 	class={cn(
 		buttonVariants({ variant }),
-		"size-(--cell-size) bg-transparent p-0 select-none disabled:opacity-50 rtl:rotate-180",
+		'size-(--cell-size) bg-transparent p-0 select-none disabled:opacity-50 rtl:rotate-180',
 		className
 	)}
 	{...restProps}
