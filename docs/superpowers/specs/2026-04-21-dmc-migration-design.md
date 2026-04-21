@@ -26,16 +26,16 @@
 
 ## Architectural decisions
 
-| Area | Decision | Reason |
-|---|---|---|
-| Approach | **Fresh rewrite using old project as reference.** Copy nothing verbatim; re-derive shape with simpler layout. | User requested C — readability and quality first. Semantics still reference-checked against old code. |
-| Tenancy | Organization = DMC tenant. Members have roles `owner` / `admin` / `member`. Global `superadmin` sits outside orgs. | Matches old project. Correct fit for B2B SaaS billed per tenant. |
-| Auth methods | Email OTP (8 digits) + Google OAuth. No password. | Matches old project. |
-| Database | Postgres. Fresh wipe, no data to preserve. IDs use Postgres 18's native `uuidv7()` function at column default. | Greenfield. `uuidv7` in the DB avoids an app-layer import for the common case. |
-| Schema source | Generate base with `pnpm auth:schema` (better-auth CLI), then customise in `schema.ts`. | Guarantees better-auth required columns are present and correctly typed. |
-| Observability | Axiom for both logs and traces via OTEL exporter + `@axiomhq/pino`. | Replaces old pino-loki + Loki setup. |
-| Adapter | `@sveltejs/adapter-node` | Required by pino/OTEL/Polar webhooks; matches old project. |
-| Adapter-auto removed | Yes | Only works for edge runtimes that won't support Node OTEL. |
+| Area                 | Decision                                                                                                           | Reason                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Approach             | **Fresh rewrite using old project as reference.** Copy nothing verbatim; re-derive shape with simpler layout.      | User requested C — readability and quality first. Semantics still reference-checked against old code. |
+| Tenancy              | Organization = DMC tenant. Members have roles `owner` / `admin` / `member`. Global `superadmin` sits outside orgs. | Matches old project. Correct fit for B2B SaaS billed per tenant.                                      |
+| Auth methods         | Email OTP (8 digits) + Google OAuth. No password.                                                                  | Matches old project.                                                                                  |
+| Database             | Postgres. Fresh wipe, no data to preserve. IDs use Postgres 18's native `uuidv7()` function at column default.     | Greenfield. `uuidv7` in the DB avoids an app-layer import for the common case.                        |
+| Schema source        | Generate base with `pnpm auth:schema` (better-auth CLI), then customise in `schema.ts`.                            | Guarantees better-auth required columns are present and correctly typed.                              |
+| Observability        | Axiom for both logs and traces via OTEL exporter + `@axiomhq/pino`.                                                | Replaces old pino-loki + Loki setup.                                                                  |
+| Adapter              | `@sveltejs/adapter-node`                                                                                           | Required by pino/OTEL/Polar webhooks; matches old project.                                            |
+| Adapter-auto removed | Yes                                                                                                                | Only works for edge runtimes that won't support Node OTEL.                                            |
 
 ## Simplification principles (applied everywhere)
 
@@ -238,7 +238,12 @@ src/lib/features/auth/
 
 ```ts
 export { Auth, Layout, Onboarding };
-export { sendEmailOTPSchema, signInWithEmailOTPSchema, createOrgOnboardingSchema, invitationActionSchema };
+export {
+	sendEmailOTPSchema,
+	signInWithEmailOTPSchema,
+	createOrgOnboardingSchema,
+	invitationActionSchema
+};
 export { roleDefinitions, assignableRoles };
 export type { Session, ActiveMember };
 ```
@@ -250,7 +255,7 @@ export type { Session, ActiveMember };
 ```ts
 export { createAuthHandle, createRedirectHandle, createSetupHandle };
 export { getSession, getSessionOrNull };
-export { impersonateUser, stopImpersonating };   // consumed by admin feature
+export { impersonateUser, stopImpersonating }; // consumed by admin feature
 ```
 
 ### Preserved behaviour
@@ -335,17 +340,17 @@ Activated by SvelteKit's `experimental.instrumentation.server: true`. Must run b
 import type { Session, ActiveMember } from '$features/auth';
 
 declare global {
-  namespace App {
-    interface Locals {
-      session: Session | null;
-      activeMember: ActiveMember | null;
-      context: {
-        requestId: string;
-        userId?: string;
-        orgId?: string;
-      };
-    }
-  }
+	namespace App {
+		interface Locals {
+			session: Session | null;
+			activeMember: ActiveMember | null;
+			context: {
+				requestId: string;
+				userId?: string;
+				orgId?: string;
+			};
+		}
+	}
 }
 ```
 
