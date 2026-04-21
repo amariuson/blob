@@ -26,16 +26,16 @@
 
 ## Architectural decisions
 
-| Area                 | Decision                                                                                                           | Reason                                                                                                |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Approach             | **Fresh rewrite using old project as reference.** Copy nothing verbatim; re-derive shape with simpler layout.      | User requested C — readability and quality first. Semantics still reference-checked against old code. |
-| Tenancy              | Organization = DMC tenant. Members have roles `owner` / `admin` / `member`. Global `superadmin` sits outside orgs. | Matches old project. Correct fit for B2B SaaS billed per tenant.                                      |
-| Auth methods         | Email OTP (8 digits) + Google OAuth. No password.                                                                  | Matches old project.                                                                                  |
-| Database             | Postgres. Fresh wipe, no data to preserve. IDs use Postgres 18's native `uuidv7()` function at column default.     | Greenfield. `uuidv7` in the DB avoids an app-layer import for the common case.                        |
+| Area                 | Decision                                                                                                                                                                                      | Reason                                                                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Approach             | **Fresh rewrite using old project as reference.** Copy nothing verbatim; re-derive shape with simpler layout.                                                                                 | User requested C — readability and quality first. Semantics still reference-checked against old code.                                                  |
+| Tenancy              | Organization = DMC tenant. Members have roles `owner` / `admin` / `member`. Global `superadmin` sits outside orgs.                                                                            | Matches old project. Correct fit for B2B SaaS billed per tenant.                                                                                       |
+| Auth methods         | Email OTP (8 digits) + Google OAuth. No password.                                                                                                                                             | Matches old project.                                                                                                                                   |
+| Database             | Postgres. Fresh wipe, no data to preserve. IDs use Postgres 18's native `uuidv7()` function at column default.                                                                                | Greenfield. `uuidv7` in the DB avoids an app-layer import for the common case.                                                                         |
 | Schema source        | Hand-written `schema.ts`. Generate `auth.schema.ts` with `pnpm auth:schema` as a **reference only** — it cannot be layered/overridden cleanly for native UUIDv7 defaults or custom relations. | Preserves exact better-auth column shapes (verified against CLI output) while keeping full control over column defaults, relations, and custom tables. |
-| Observability        | Axiom for both logs and traces via OTEL exporter + `@axiomhq/pino`.                                                | Replaces old pino-loki + Loki setup.                                                                  |
-| Adapter              | `@sveltejs/adapter-node`                                                                                           | Required by pino/OTEL/Polar webhooks; matches old project.                                            |
-| Adapter-auto removed | Yes                                                                                                                | Only works for edge runtimes that won't support Node OTEL.                                            |
+| Observability        | Axiom for both logs and traces via OTEL exporter + `@axiomhq/pino`.                                                                                                                           | Replaces old pino-loki + Loki setup.                                                                                                                   |
+| Adapter              | `@sveltejs/adapter-node`                                                                                                                                                                      | Required by pino/OTEL/Polar webhooks; matches old project.                                                                                             |
+| Adapter-auto removed | Yes                                                                                                                                                                                           | Only works for edge runtimes that won't support Node OTEL.                                                                                             |
 
 ## Simplification principles (applied everywhere)
 
@@ -43,7 +43,7 @@
 2. **One export = one responsibility.** No barrel re-exports unless consumed externally.
 3. **Remove dead branches.** No `TEST_OTP` / `isTestEnv()` plumbing (no tests).
 4. **Comments justify WHY.** If removing a comment wouldn't confuse a future reader, it goes.
-5. **No premature abstraction** — *but* keep the abstractions that earn their keep: `lifecycle/` stays (solves a real shutdown-ordering problem), the Polar adapter layer stays (provides customer-provisioning hooks that the plain SDK client doesn't — see Services).
+5. **No premature abstraction** — _but_ keep the abstractions that earn their keep: `lifecycle/` stays (solves a real shutdown-ordering problem), the Polar adapter layer stays (provides customer-provisioning hooks that the plain SDK client doesn't — see Services).
 6. **Types over runtime guards.** Drop `invariant(...)` calls where better-auth's return types already narrow.
 
 ## Top-level layout

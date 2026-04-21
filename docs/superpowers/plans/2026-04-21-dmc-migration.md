@@ -4,7 +4,7 @@
 
 **Goal:** Port the `auth` and `admin` features from `../blob-never` to `../blob` as a fresh rewrite, with services layer (logger/tracing → Axiom, redis, email, polar, storage, lifecycle), keeping every intermediate commit green under `pnpm lint` and `pnpm check`.
 
-**Architecture:** Build bottom-up in numbered tasks: dependencies → env+lifecycle → observability → infra services → auth config+stubs → schema → auth real impl → handles+hooks → auth UI+routes → admin → app shell → dev tools → final smoke test. Auth plugins must be wired *before* `pnpm auth:schema` can emit a reference snapshot for the hand-written `schema.ts`.
+**Architecture:** Build bottom-up in numbered tasks: dependencies → env+lifecycle → observability → infra services → auth config+stubs → schema → auth real impl → handles+hooks → auth UI+routes → admin → app shell → dev tools → final smoke test. Auth plugins must be wired _before_ `pnpm auth:schema` can emit a reference snapshot for the hand-written `schema.ts`.
 
 **Tech Stack:** SvelteKit 2, Svelte 5 (runes), TypeScript, `better-auth` + admin + organization + emailOTP plugins, drizzle-orm on Postgres 18 (native `uuidv7()`), ioredis, Resend + `better-svelte-email`, `@polar-sh/better-auth` + `@polar-sh/sdk`, pino + `@axiomhq/pino`, OpenTelemetry → Axiom OTLP, `@aws-sdk/client-s3`, shadcn-svelte, Zod v4.
 
@@ -118,6 +118,7 @@ Expected: "On branch feat/dmc-auth-admin-migration. nothing to commit, working t
 ## Task 2: Update dependencies and swap adapter
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `svelte.config.js` (import swap)
 
@@ -139,33 +140,33 @@ Runtime packages must live in `dependencies`, not `devDependencies`: when the ap
 
 ```json
 {
-  "@aws-sdk/client-s3": "latest",
-  "@aws-sdk/s3-request-presigner": "latest",
-  "@axiomhq/pino": "latest",
-  "@kubiks/otel-drizzle": "latest",
-  "@kubiks/otel-polar": "latest",
-  "@kubiks/otel-resend": "latest",
-  "@opentelemetry/api": "latest",
-  "@opentelemetry/auto-instrumentations-node": "latest",
-  "@opentelemetry/exporter-trace-otlp-proto": "latest",
-  "@opentelemetry/resources": "latest",
-  "@opentelemetry/sdk-node": "latest",
-  "@opentelemetry/semantic-conventions": "latest",
-  "@polar-sh/better-auth": "latest",
-  "@polar-sh/sdk": "latest",
-  "better-svelte-email": "latest",
-  "date-fns": "latest",
-  "dotenv": "latest",
-  "import-in-the-middle": "latest",
-  "ioredis": "latest",
-  "pino": "latest",
-  "pino-pretty": "latest",
-  "resend": "latest",
-  "runed": "latest",
-  "svelte-toolbelt": "latest",
-  "sveltekit-rate-limiter": "latest",
-  "uuidv7": "latest",
-  "zod": "latest"
+	"@aws-sdk/client-s3": "latest",
+	"@aws-sdk/s3-request-presigner": "latest",
+	"@axiomhq/pino": "latest",
+	"@kubiks/otel-drizzle": "latest",
+	"@kubiks/otel-polar": "latest",
+	"@kubiks/otel-resend": "latest",
+	"@opentelemetry/api": "latest",
+	"@opentelemetry/auto-instrumentations-node": "latest",
+	"@opentelemetry/exporter-trace-otlp-proto": "latest",
+	"@opentelemetry/resources": "latest",
+	"@opentelemetry/sdk-node": "latest",
+	"@opentelemetry/semantic-conventions": "latest",
+	"@polar-sh/better-auth": "latest",
+	"@polar-sh/sdk": "latest",
+	"better-svelte-email": "latest",
+	"date-fns": "latest",
+	"dotenv": "latest",
+	"import-in-the-middle": "latest",
+	"ioredis": "latest",
+	"pino": "latest",
+	"pino-pretty": "latest",
+	"resend": "latest",
+	"runed": "latest",
+	"svelte-toolbelt": "latest",
+	"sveltekit-rate-limiter": "latest",
+	"uuidv7": "latest",
+	"zod": "latest"
 }
 ```
 
@@ -215,11 +216,12 @@ git commit -m "Move runtime deps to dependencies, add service libs, swap to adap
 ## Task 3: Create `.env.example` and bootstrap `.env`
 
 **Files:**
+
 - Create: `.env.example`
 - Create: `.env` (from `.env.example`; already gitignored)
 - Modify: `.gitignore` (verify `.env` listed)
 
-**Background:** `drizzle.config.ts` throws at import time if `DATABASE_URL` is unset, so `pnpm db:generate` / `pnpm db:migrate` / `pnpm auth:schema` all need `.env` populated *before* Task 19. `DATABASE_URL` must match `compose.yaml` which defines `POSTGRES_USER: root`, `POSTGRES_PASSWORD: mysecretpassword`, `POSTGRES_DB: local`.
+**Background:** `drizzle.config.ts` throws at import time if `DATABASE_URL` is unset, so `pnpm db:generate` / `pnpm db:migrate` / `pnpm auth:schema` all need `.env` populated _before_ Task 19. `DATABASE_URL` must match `compose.yaml` which defines `POSTGRES_USER: root`, `POSTGRES_PASSWORD: mysecretpassword`, `POSTGRES_DB: local`.
 
 - [ ] **Step 1: Write `.env.example`**
 
@@ -297,6 +299,7 @@ The actual `.env` file is gitignored so it won't be staged.
 ## Task 4: Delete `demo/` route and stub current auth/schema
 
 **Files:**
+
 - Delete: `src/routes/demo/` (entire directory)
 - Delete: `src/lib/server/auth.ts` (will be replaced by feature-owned version)
 - Modify: `src/lib/server/db/schema.ts` (clear task-placeholder content)
@@ -374,6 +377,7 @@ git commit -m "Remove demo route and stub auth/schema/hooks for rewrite"
 ## Task 5: Create `env.server.ts`
 
 **Files:**
+
 - Create: `src/lib/server/env.server.ts`
 
 **Background:** Single source of typed env access. Fails fast with a readable error when required vars are missing. Uses `$env/dynamic/private` for runtime-variable values (so deploys can override without rebuild).
@@ -495,7 +499,9 @@ export function requireAxiom() {
 export function requireS3() {
 	const { S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY } = env;
 	if (!S3_ENDPOINT || !S3_REGION || !S3_BUCKET || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) {
-		throw new Error('S3 not configured: set S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY');
+		throw new Error(
+			'S3 not configured: set S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY'
+		);
 	}
 	return { S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY };
 }
@@ -529,6 +535,7 @@ git commit -m "Add typed env accessor with fail-fast required-var check"
 ## Task 6: Expand `shared/utils.ts`
 
 **Files:**
+
 - Modify: `src/lib/shared/utils.ts`
 - Create: `src/lib/shared/types/entitlements.ts`
 
@@ -614,6 +621,7 @@ git commit -m "Add generateSlug, invariant, getClientIp; Entitlements type"
 ## Task 7: Create `lifecycle/` service
 
 **Files:**
+
 - Create: `src/lib/server/services/lifecycle/index.ts`
 - Create: `src/lib/server/services/lifecycle/lifecycle.server.ts`
 
@@ -690,6 +698,7 @@ git commit -m "Add lifecycle service with LIFO shutdown hooks and timeouts"
 ## Task 8: Create `logger/` service
 
 **Files:**
+
 - Create: `src/lib/server/services/logger/index.ts`
 - Create: `src/lib/server/services/logger/logger.server.ts`
 
@@ -705,7 +714,10 @@ import { env, isDev } from '$lib/server/env.server';
 import { onShutdown } from '../lifecycle';
 
 const transport = isDev
-	? pino.transport({ target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:HH:MM:ss' } })
+	? pino.transport({
+			target: 'pino-pretty',
+			options: { colorize: true, translateTime: 'SYS:HH:MM:ss' }
+		})
 	: pino.transport({
 			target: '@axiomhq/pino',
 			options: { dataset: env.AXIOM_DATASET_LOGS, token: env.AXIOM_TOKEN }
@@ -752,6 +764,7 @@ git commit -m "Add logger service: pino + Axiom transport (pretty in dev)"
 ## Task 9: Create `tracing/` service
 
 **Files:**
+
 - Create: `src/lib/server/services/tracing/index.ts`
 - Create: `src/lib/server/services/tracing/tracing.server.ts`
 
@@ -822,7 +835,7 @@ export { startTracing } from './tracing.server';
 
 - [ ] **Step 3: Create `src/instrumentation.server.ts`**
 
-**Order-critical:** import `logger` *before* calling `startTracing()`. Both services register shutdown hooks via `onShutdown()` at module-load side-effect. Lifecycle runs hooks **LIFO**, so:
+**Order-critical:** import `logger` _before_ calling `startTracing()`. Both services register shutdown hooks via `onShutdown()` at module-load side-effect. Lifecycle runs hooks **LIFO**, so:
 
 - Logger imported first → registers first → runs **last** on shutdown.
 - Tracing registered second → runs **first** on shutdown.
@@ -856,6 +869,7 @@ git commit -m "Add tracing service: OTEL NodeSDK -> Axiom, wired via instrumenta
 ## Task 10: Create `redis/` service
 
 **Files:**
+
 - Create: `src/lib/server/services/redis/index.ts`
 - Create: `src/lib/server/services/redis/redis.server.ts`
 
@@ -950,6 +964,7 @@ If `compose.yaml` was already on `postgres:18`, skip the commit.
 ## Task 12: Create `email/` service
 
 **Files:**
+
 - Create: `src/lib/server/services/email/index.ts`
 - Create: `src/lib/server/services/email/email.server.ts`
 - Create: `src/lib/server/services/email/renderer.server.ts`
@@ -999,6 +1014,7 @@ export async function send({ to, subject, html, text }: SendArgs) {
 - [ ] **Step 3: Port the four templates**
 
 Each template is a `.svelte` file using `better-svelte-email` primitives. Read `../blob-never/src/lib/server/services/email/templates/` for contents and port each with the following simplifications:
+
 - Drop any shared partials directory — inline header/footer HTML directly in each template (only 4 templates).
 - Use `env.APP_NAME` in subject lines/sender displays (passed as a prop from `emails.server.ts`, not imported in the `.svelte`).
 
@@ -1103,6 +1119,7 @@ git commit -m "Add email service: Resend + better-svelte-email with 4 templates"
 ## Task 13: Create `polar/` service (client + adapter)
 
 **Files:**
+
 - Create: `src/lib/server/services/polar/index.ts`
 - Create: `src/lib/server/services/polar/client.ts`
 - Create: `src/lib/server/services/polar/adapter.ts`
@@ -1110,6 +1127,7 @@ git commit -m "Add email service: Resend + better-svelte-email with 4 templates"
 **Background:** `client.ts` returns a Polar SDK instance or a dev mock based on `env.POLAR_SERVER`. `adapter.ts` exposes higher-level ops that will be called from better-auth `organizationHooks` — these are needed because the bare `@polar-sh/better-auth` plugin does not automatically provision customers at org-creation.
 
 **Reference:** `/Users/amariuson/dev/projects/blob-never/src/lib/server/services/polar/` — read `adapter.ts`, `client.production.ts`, `client.mock.ts`, port with simplifications:
+
 - Flatten `client.production.ts` + `client.mock.ts` into `client.ts` (single factory function picks between them).
 - Keep the adapter's `ensureCustomer`, `syncOrgEntitlements`, webhook dispatch helpers.
 
@@ -1137,6 +1155,7 @@ If the old project shipped a mock for test scenarios, we drop it here — no tes
 - [ ] **Step 2: Write `adapter.ts`**
 
 Read `../blob-never/src/lib/server/services/polar/adapter.ts` for semantics. Port with:
+
 - Remove `try/catch/log/rethrow` — OTEL captures Polar SDK errors via `polarInstrumentation`.
 - Use `logger` from `$services/logger` for one info-level log per op ("ensured polar customer for org X").
 
@@ -1149,7 +1168,7 @@ Required exports:
 // Returns the Polar customer's external id.
 export async function ensureCustomer(
 	org: { id: string; name: string; email?: string | null },
-	creatorEmail: string  // required — caller provides from session.user.email
+	creatorEmail: string // required — caller provides from session.user.email
 ): Promise<string>;
 
 // Fetches current subscriptions/benefits/meters from Polar for the org's customer,
@@ -1162,6 +1181,7 @@ export async function handlePolarWebhook(headers: Headers, body: string): Promis
 ```
 
 Behaviour:
+
 - `ensureCustomer` calls `polarClient.customers.get({ externalId: org.id })`; if 404, creates with `email = org.email ?? creatorEmail`. Never silently falls back to a placeholder — if both are empty, throw.
 - `syncOrgEntitlements` reads the customer's active subscriptions/benefits/meters and writes the full `Entitlements` jsonb to `organization.entitlements` (including `customerId` — see Entitlements type update in Task 6).
 - `handlePolarWebhook` validates the `polar-signature` header via `env.POLAR_WEBHOOK_SECRET`, branches on `event.type`, and for org-affecting events resolves the `externalId` → `orgId` then calls `syncOrgEntitlements`.
@@ -1171,7 +1191,7 @@ Keep under 180 lines total. Call `requirePolar()` from `env.server` inside the a
 **Public contract — `polar/index.ts` exports four names:**
 
 ```typescript
-export { polarClient } from './client';                             // Polar SDK instance
+export { polarClient } from './client'; // Polar SDK instance
 export { ensureCustomer, syncOrgEntitlements, handlePolarWebhook } from './adapter';
 ```
 
@@ -1203,13 +1223,19 @@ git commit -m "Add polar service: client factory + adapter for customer provisio
 ## Task 14: Create `storage/` service
 
 **Files:**
+
 - Create: `src/lib/server/services/storage/index.ts`
 - Create: `src/lib/server/services/storage/storage.server.ts`
 
 - [ ] **Step 1: Write `storage.server.ts`**
 
 ```typescript
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {
+	S3Client,
+	PutObjectCommand,
+	GetObjectCommand,
+	DeleteObjectCommand
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { env } from '$lib/server/env.server';
@@ -1285,6 +1311,7 @@ git commit -m "Add storage service: minimal S3 client with presigned URLs"
 ## Task 15: Create `features/auth/access-control.ts`
 
 **Files:**
+
 - Create: `src/lib/features/auth/access-control.ts`
 
 **Background:** Defines roles (`owner`, `admin`, `member`, `superadmin`) and permissions using `better-auth/plugins/access`. Consumed by `auth.ts` config (Task 18) and re-exported from the auth feature's public API (Task 34) for UI display.
@@ -1312,6 +1339,7 @@ git commit -m "Add auth access-control: roles, permissions, UI role definitions"
 ## Task 16: Create `features/auth/schemas.ts`
 
 **Files:**
+
 - Create: `src/lib/features/auth/schemas.ts`
 
 - [ ] **Step 1: Write the file**
@@ -1356,6 +1384,7 @@ git commit -m "Add auth Zod schemas for OTP, onboarding, invitations"
 ## Task 17: Create `auth/server/session-storage.ts` and `auth/server/polar-plugin.ts`
 
 **Files:**
+
 - Create: `src/lib/features/auth/server/session-storage.ts`
 - Create: `src/lib/features/auth/server/polar-plugin.ts`
 
@@ -1378,6 +1407,7 @@ Uses `redisClient` from `$services/redis`. Keep under 40 lines. Use `SET key val
 - [ ] **Step 2: Write `polar-plugin.ts`**
 
 Port `.../plugins/polar.ts` but simplify:
+
 - Remove fan-out to multiple plugins if the old file exported several; keep only what's consumed from `auth.ts`.
 - Webhook handler delegates to `handlePolarWebhook` from `$services/polar` — no logic here beyond signature verification.
 
@@ -1407,6 +1437,7 @@ git commit -m "Add auth session-storage (Redis) and Polar plugin wiring"
 ## Task 18: Create `auth/server/api/hooks.ts` as STUBS + `auth/server/auth.ts` config
 
 **Files:**
+
 - Create: `src/lib/features/auth/server/api/hooks.ts` (stubs only)
 - Create: `src/lib/features/auth/server/auth.ts`
 
@@ -1677,6 +1708,7 @@ git commit -m "Wire auth config + hook stubs (unblocks pnpm auth:schema)"
 ## Task 19: Generate reference schema and hand-write `schema.ts`
 
 **Files:**
+
 - Modify: `package.json` (update `auth:schema` script path)
 - Create: `src/lib/server/db/auth.schema.ts` (via `pnpm auth:schema`; reference only, never imported)
 - Create: `src/lib/server/db/schema.ts` (hand-written, replacing the Task 4 placeholder)
@@ -1833,6 +1865,7 @@ git commit -m "Hand-write schema.ts with uuidv7() defaults; fix auth:schema path
 ## Task 20: Replace `api/queries.ts` stub with real implementation
 
 **Files:**
+
 - Modify: `src/lib/features/auth/server/api/queries.ts` (replace stub)
 
 **Reference:** `../blob-never/src/lib/features/auth/server/api/queries/user.ts` and `.../queries/organization.ts`. Merge them into one file.
@@ -1842,17 +1875,22 @@ git commit -m "Hand-write schema.ts with uuidv7() defaults; fix auth:schema path
 Required exports:
 
 ```typescript
-export async function getSession(): Promise<Session>;                 // throws if no session
+export async function getSession(): Promise<Session>; // throws if no session
 export async function getSessionOrNull(): Promise<Session | null>;
 export async function getActiveMember(): Promise<ActiveMember>;
 export async function getActiveMemberOrNull(): Promise<ActiveMember | null>;
 export async function listUserOrganizations(): Promise<Array<{ id: string; createdAt: Date }>>;
-export async function listUserInvitations(email: string): Promise<Array<{
-	id: string;
-	organizationName: string;
-	role: string;
-}>>;
-export async function getAffectedSessions(userId: string, orgId: string): Promise<Array<{ id: string }>>;
+export async function listUserInvitations(email: string): Promise<
+	Array<{
+		id: string;
+		organizationName: string;
+		role: string;
+	}>
+>;
+export async function getAffectedSessions(
+	userId: string,
+	orgId: string
+): Promise<Array<{ id: string }>>;
 export async function validateRoleChange(
 	member: { role: string },
 	newRole: string,
@@ -1861,6 +1899,7 @@ export async function validateRoleChange(
 ```
 
 Implementation notes:
+
 - `getSessionOrNull` caches on `event.locals.session` (set by the setup handle) — if already present, return directly; otherwise call `auth.api.getSession({ headers })` and cache.
 - Same pattern for `getActiveMember`/`getActiveMemberOrNull` using `event.locals.activeMember`.
 - `validateRoleChange` lives here (not `hooks.ts`) because it's a query — it reads permissions tables. Refer to the old `beforeUpdateMemberRole` logic.
@@ -1896,9 +1935,11 @@ git commit -m "Implement auth queries: session, active member, orgs, invitations
 ## Task 21: Replace `api/mutations.ts` stub with real implementation
 
 **Files:**
+
 - Modify: `src/lib/features/auth/server/api/mutations.ts` (replace stub)
 
 **Reference:** Merge these old files:
+
 - `.../mutations/auth.ts` (sendEmailOTP, signInWithEmailOTP, signInWithGoogle)
 - `.../mutations/user.ts` (signOutUser, clearMemberSessions)
 - `.../mutations/onboarding.ts` (createOrganizationOnboarding, acceptInvitationOnboarding, declineInvitationOnboarding)
@@ -1911,12 +1952,20 @@ Required exports and their purposes (signatures from the spec's §4 preserved be
 
 ```typescript
 export async function sendEmailOTP(data: z.infer<typeof sendEmailOTPSchema>): Promise<void>;
-export async function signInWithEmailOTP(data: z.infer<typeof signInWithEmailOTPSchema>): Promise<never>;  // redirects
+export async function signInWithEmailOTP(
+	data: z.infer<typeof signInWithEmailOTPSchema>
+): Promise<never>; // redirects
 export async function signInWithGoogle(): Promise<void>;
-export async function signOutUser(): Promise<never>;  // redirects to /sign-in
-export async function createOrganizationOnboarding(data: z.infer<typeof createOrgOnboardingSchema>): Promise<never>;
-export async function acceptInvitationOnboarding(data: z.infer<typeof invitationActionSchema>): Promise<never>;
-export async function declineInvitationOnboarding(data: z.infer<typeof invitationActionSchema>): Promise<void>;
+export async function signOutUser(): Promise<never>; // redirects to /sign-in
+export async function createOrganizationOnboarding(
+	data: z.infer<typeof createOrgOnboardingSchema>
+): Promise<never>;
+export async function acceptInvitationOnboarding(
+	data: z.infer<typeof invitationActionSchema>
+): Promise<never>;
+export async function declineInvitationOnboarding(
+	data: z.infer<typeof invitationActionSchema>
+): Promise<void>;
 export async function setActiveOrganization(organizationId: string): Promise<unknown>;
 export async function clearMemberSessions(userId: string, orgId: string): Promise<void>;
 export async function impersonateUser(userId: string): Promise<unknown>;
@@ -1924,6 +1973,7 @@ export async function stopImpersonating(): Promise<unknown>;
 ```
 
 Simplifications to apply:
+
 - Remove all `try { await auth.api.X(...) } catch (err) { logger.error(...); throw err }` — OTEL captures. **Do not swallow errors silently** anywhere else.
 - **Only explicit exception:** `clearMemberSessions` may warn-log-and-continue on Redis-delete failures because the DB-level clear of `activeOrganizationId` is the source of truth — Redis is just a cache. Comment the line with the justification.
 - Expected user-facing failures → `error(status, { code, message })`. Codes per the spec: `'VALIDATION'` (400), `'FORBIDDEN'` (403), `'NOT_FOUND'` (404), `'TOO_MANY_REQUESTS'` (429).
@@ -1952,9 +2002,11 @@ git commit -m "Implement auth mutations: OTP, OAuth, onboarding, impersonation"
 ## Task 22: Replace `api/hooks.ts` stub with real implementation
 
 **Files:**
+
 - Modify: `src/lib/features/auth/server/api/hooks.ts` (replace stub)
 
 **Reference:** Merge these old files:
+
 - `.../api/database.hooks.ts` (beforeUserCreate, afterUserCreate)
 - `.../api/organization.hooks.ts` (initializeOrganization, recordOrgDeletion)
 - `.../api/polar.hooks.ts` (if present; the afterCreateOrganization Polar call)
@@ -1982,6 +2034,7 @@ export function validateInvitation(
 ```
 
 Notes:
+
 - `initializeOrganization` calls `ensureCustomer(org)` from `$services/polar` and records the returned external customer id onto `organization.entitlements.customerId` (via drizzle update). Store `customerId` inside the entitlements jsonb to avoid a schema change.
 - `recordOrgDeletion` writes an `auditLog` row with `action: 'organization.delete'`.
 - `validateInvitation` — admin cannot invite owner; only owner can invite admin; match the old `logic/validation.ts` rules exactly.
@@ -2006,6 +2059,7 @@ git commit -m "Implement auth lifecycle hooks: user create, org init/delete, inv
 ## Task 23: Create `auth/server/handles.ts` and wire `hooks.server.ts`
 
 **Files:**
+
 - Create: `src/lib/features/auth/server/handles.ts`
 - Modify: `src/lib/features/auth/server/index.ts` (create if absent)
 - Modify: `src/hooks.server.ts`
@@ -2143,6 +2197,7 @@ git commit -m "Add auth handles (setup/redirect/auth) and wire hooks.server + ap
 ## Task 24: Create `shared/form/form-handler.svelte.ts`
 
 **Files:**
+
 - Create: `src/lib/shared/form/form-handler.svelte.ts`
 
 - [ ] **Step 1: Port the file**
@@ -2168,6 +2223,7 @@ git commit -m "Add shared form-handler helper for remote forms"
 ## Task 25: Create auth `components/` (layout + forms + auth + onboarding)
 
 **Files:**
+
 - Create: `src/lib/features/auth/components/layout.svelte`
 - Create: `src/lib/features/auth/components/auth.svelte`
 - Create: `src/lib/features/auth/components/onboarding.svelte`
@@ -2176,10 +2232,12 @@ git commit -m "Add shared form-handler helper for remote forms"
 - Create: `src/lib/features/auth/components/forms/otp-form.svelte`
 
 **Reference:** `../blob-never/src/lib/features/auth/components/` — read each file and port with simplifications:
+
 - Drop `TEST_OTP` branching in `otp-form.svelte` if any — there is no test mode.
 - Keep the `formHandler` wrapping pattern.
 
 **Import rule for components** (don't get this wrong):
+
 - Components **inside** a feature import its remotes via the **internal** relative path (`../auth.remote`). This is fine and intentional — they're part of the same module, not external consumers.
 - Components **outside** a feature (routes, other features) always import via the public API (`$features/auth`). Never reach into `$features/auth/auth.remote` or `$features/auth/components/...` from outside.
 - Only re-export a symbol from `$features/auth/index.ts` if an external caller actually needs it. Don't re-export the internal forms used only by `auth.svelte` / `onboarding.svelte`.
@@ -2217,6 +2275,7 @@ Otherwise hold and bundle into Task 26.
 ## Task 26: Create `auth.remote.ts` and `features/auth/index.ts`
 
 **Files:**
+
 - Create: `src/lib/features/auth/auth.remote.ts`
 - Create: `src/lib/features/auth/index.ts`
 
@@ -2334,6 +2393,7 @@ git commit -m "Add auth remote functions and public API; close auth feature"
 ## Task 27: Create `(auth)` routes
 
 **Files:**
+
 - Create: `src/routes/(auth)/sign-in/+page.svelte`
 - Create: `src/routes/(auth)/sign-up/+page.svelte`
 - Create: `src/routes/(auth)/onboarding/+page.svelte`
@@ -2360,6 +2420,7 @@ git commit -m "Add auth remote functions and public API; close auth feature"
 - [ ] **Step 2: Write `sign-up/+page.svelte`**
 
 Same as `sign-in/+page.svelte` but:
+
 - `heading="Create an account"`, `subHeading="Get started in seconds"`.
 - `below` snippet points at `/sign-in` instead of `/sign-up`.
 
@@ -2394,6 +2455,7 @@ git commit -m "Add (auth) routes: sign-in, sign-up, onboarding"
 ## Task 28: Build admin feature (server)
 
 **Files:**
+
 - Create: `src/lib/features/admin/server/api.ts`
 - Create: `src/lib/features/admin/server/index.ts`
 
@@ -2406,12 +2468,15 @@ Required exports:
 ```typescript
 export async function requireSuperadmin(): Promise<Session>;
 export function guardSelfAction(session: Session, targetUserId: string, action: string): void;
-export async function getUserForImpersonation(userId: string): Promise<{
-	role: string | null;
-	name: string;
-	email: string;
-	banned: boolean | null;
-} | undefined>;
+export async function getUserForImpersonation(userId: string): Promise<
+	| {
+			role: string | null;
+			name: string;
+			email: string;
+			banned: boolean | null;
+	  }
+	| undefined
+>;
 export async function getImpersonationStatus(): Promise<{
 	isImpersonating: true;
 	impersonatorId: string;
@@ -2425,11 +2490,12 @@ export async function logAuditEvent(params: {
 	metadata?: Record<string, unknown>;
 	request: Request;
 }): Promise<void>;
-export async function startImpersonation(userId: string): Promise<never>;  // redirects to /
+export async function startImpersonation(userId: string): Promise<never>; // redirects to /
 export async function stopImpersonation(): Promise<void>;
 ```
 
 Simplifications vs old:
+
 - Single log line per op, not one at start + one at end.
 - No `try/catch/log/rethrow`.
 - `ipAddress` / `userAgent` extraction via `getClientIp(request)` helper from `$lib/shared/utils`.
@@ -2468,6 +2534,7 @@ git commit -m "Add admin server API: impersonation, audit log, superadmin gate"
 ## Task 29: Build admin feature (client-safe + remote + components)
 
 **Files:**
+
 - Create: `src/lib/features/admin/admin.remote.ts`
 - Create: `src/lib/features/admin/components/impersonation-banner.svelte`
 - Create: `src/lib/features/admin/components/stop-impersonation-form.svelte`
@@ -2518,6 +2585,7 @@ git commit -m "Add admin client API, banner component, stop-impersonation form"
 ## Task 30: Build `(app)` shell and root route
 
 **Files:**
+
 - Create: `src/lib/shared/components/sidebar/app-sidebar.svelte`
 - Create: `src/routes/(app)/+layout.svelte`
 - Create: `src/routes/(app)/+page.svelte`
@@ -2646,6 +2714,7 @@ git commit -m "Add (app) shell with sidebar, impersonation banner, minimal home"
 ## Task 31: Build `(dev)/email-preview`
 
 **Files:**
+
 - Create: `src/routes/(dev)/+layout.server.ts`
 - Create: `src/routes/(dev)/email-preview/[...email]/+page.server.ts`
 - Create: `src/routes/(dev)/email-preview/[...email]/+page.svelte`
@@ -2666,6 +2735,7 @@ export const load = () => {
 - [ ] **Step 2: Port `email-preview/[...email]/+page.server.ts`**
 
 Reference `../blob-never/src/routes/(dev)/email-preview/[...email]/+page.server.ts`. The load function:
+
 - Reads `params.email` as a slug (e.g. `otp-verification`).
 - Dynamically imports the matching template from `$services/email/templates/...svelte`.
 - Renders it via `$services/email/renderer.server.render(...)` with a fixed stub props object per template.
