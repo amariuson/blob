@@ -1,5 +1,9 @@
 declare global {
 	namespace App {
+		interface Error {
+			message: string;
+			code?: string;
+		}
 		interface Locals {
 			// Tightened to inferred better-auth types in Task 23; loose here to unblock intermediates.
 			session: unknown;

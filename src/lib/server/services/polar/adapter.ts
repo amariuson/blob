@@ -7,7 +7,7 @@ import { db } from '$lib/server/db';
 import type { Entitlements } from '$lib/shared/types/entitlements';
 import { logger } from '$services/logger';
 
-import { polarClient } from './client';
+import { createPolarClient } from './client';
 
 type OrgInput = { id: string; name: string; email?: string | null };
 
@@ -17,7 +17,7 @@ type OrgInput = { id: string; name: string; email?: string | null };
  */
 export async function ensureCustomer(org: OrgInput, creatorEmail: string): Promise<string> {
 	try {
-		const customer = await polarClient.customers.getExternal({ externalId: org.id });
+		const customer = await createPolarClient().customers.getExternal({ externalId: org.id });
 		return customer.id;
 	} catch (err) {
 		if (!isNotFound(err)) throw err;
@@ -25,12 +25,13 @@ export async function ensureCustomer(org: OrgInput, creatorEmail: string): Promi
 
 	const email = org.email || creatorEmail;
 	if (!email) {
-		throw new Error(
-			`ensureCustomer: no email available for org ${org.id} (org.email and creatorEmail both empty)`
-		);
+		error(400, {
+			message: 'Cannot provision Polar customer: org.email and creatorEmail are both missing',
+			code: 'VALIDATION'
+		});
 	}
 
-	const created = await polarClient.customers.create({
+	const created = await createPolarClient().customers.create({
 		externalId: org.id,
 		email,
 		name: org.name
@@ -45,7 +46,7 @@ export async function ensureCustomer(org: OrgInput, creatorEmail: string): Promi
  * `Entitlements` jsonb to `organization.entitlements`.
  */
 export async function syncOrgEntitlements(orgId: string): Promise<void> {
-	const state = await polarClient.customers.getStateExternal({ externalId: orgId });
+	const state = await createPolarClient().customers.getStateExternal({ externalId: orgId });
 
 	const entitlements: Entitlements = {
 		customerId: state.id,
@@ -82,7 +83,7 @@ export async function handlePolarWebhook(headers: Headers, body: string): Promis
 	} catch (err) {
 		if (err instanceof WebhookVerificationError) {
 			logger.warn({ err }, 'polar webhook signature invalid');
-			error(401, 'Invalid webhook signature');
+			error(401, { message: 'Invalid webhook signature', code: 'UNAUTHORIZED' });
 		}
 		throw err;
 	}
