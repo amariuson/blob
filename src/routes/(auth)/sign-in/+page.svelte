@@ -1,0 +1,14 @@
+<script lang="ts">
+	import { Auth, Layout } from '$features/auth';
+	import { Button } from '$lib/shared/components/ui/button';
+</script>
+
+<Layout heading="Welcome" subHeading="Choose how you'd like to sign in">
+	<Auth />
+	{#snippet below()}
+		<p class="text-center text-sm text-accent-foreground">
+			Don't have an account?
+			<Button variant="link" class="px-2" size="lg" href="/sign-up">Sign up</Button>
+		</p>
+	{/snippet}
+</Layout>
