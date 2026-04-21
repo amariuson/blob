@@ -1,3 +1,5 @@
+import type { ActiveMember, Session } from '$features/auth/server/auth';
+
 declare global {
 	namespace App {
 		interface Error {
@@ -5,9 +7,8 @@ declare global {
 			code?: string;
 		}
 		interface Locals {
-			// Tightened to inferred better-auth types in Task 23; loose here to unblock intermediates.
-			session: unknown;
-			activeMember: unknown;
+			session: Session | null;
+			activeMember: ActiveMember | null;
 			context: {
 				requestId: string;
 				userId?: string;

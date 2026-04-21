@@ -1,3 +1,5 @@
-import type { Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 
-export const handle: Handle = ({ event, resolve }) => resolve(event);
+import { createAuthHandle, createRedirectHandle, createSetupHandle } from '$features/auth/server';
+
+export const handle = sequence(createSetupHandle(), createRedirectHandle(), createAuthHandle());
