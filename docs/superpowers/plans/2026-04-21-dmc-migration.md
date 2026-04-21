@@ -127,11 +127,13 @@ Runtime packages must live in `dependencies`, not `devDependencies`: when the ap
 
 - [ ] **Step 1: Edit `package.json` — create `dependencies` section and move runtime packages**
 
-**Move from `devDependencies` to `dependencies`** (runtime libs, must install in prod):
+**Move from `devDependencies` to `dependencies`** (runtime libs — imported from the built server bundle):
 
-`better-auth`, `@better-auth/cli`, `drizzle-orm`, `postgres`, `svelte`, `bits-ui`, `@tabler/icons-svelte`, `@internationalized/date`, `@tanstack/table-core`, `clsx`, `embla-carousel-svelte`, `formsnap`, `layerchart`, `mode-watcher`, `paneforge`, `shadcn-svelte`, `svelte-sonner`, `sveltekit-superforms`, `tailwind-merge`, `tailwind-variants`, `tw-animate-css`, `vaul-svelte`, `@fontsource-variable/geist`, `@fontsource-variable/merriweather`.
+`better-auth`, `drizzle-orm`, `postgres`, `svelte`, `bits-ui`, `@tabler/icons-svelte`, `@internationalized/date`, `@tanstack/table-core`, `clsx`, `embla-carousel-svelte`, `formsnap`, `layerchart`, `mode-watcher`, `paneforge`, `svelte-sonner`, `tailwind-merge`, `tailwind-variants`, `tw-animate-css`, `vaul-svelte`, `@fontsource-variable/geist`, `@fontsource-variable/merriweather`.
 
-**Keep in `devDependencies`** (build/check/lint-time only): `@eslint/compat`, `@eslint/js`, `@sveltejs/kit`, `@sveltejs/vite-plugin-svelte`, `@tailwindcss/vite`, `@types/node`, `drizzle-kit`, `eslint`, `eslint-config-prettier`, `eslint-plugin-svelte`, `globals`, `prettier`, `prettier-plugin-svelte`, `prettier-plugin-tailwindcss`, `svelte-check`, `tailwindcss`, `typescript`, `typescript-eslint`, `vite`.
+**Keep in `devDependencies`** (build/check/lint/codegen only — not imported at runtime): `@better-auth/cli` (only runs `auth:schema`), `@eslint/compat`, `@eslint/js`, `@sveltejs/kit`, `@sveltejs/vite-plugin-svelte`, `@tailwindcss/vite`, `@types/node`, `drizzle-kit`, `eslint`, `eslint-config-prettier`, `eslint-plugin-svelte`, `globals`, `prettier`, `prettier-plugin-svelte`, `prettier-plugin-tailwindcss`, `shadcn-svelte` (CLI component generator), `svelte-check`, `tailwindcss`, `typescript`, `typescript-eslint`, `vite`.
+
+**Remove entirely** (unused / forbidden by spec): `@sveltejs/adapter-auto`, `sveltekit-superforms` (spec forbids superforms — remote functions only).
 
 **Add new `dependencies`** (for the migration — use `latest` so pnpm picks current version at install time):
 
@@ -167,9 +169,7 @@ Runtime packages must live in `dependencies`, not `devDependencies`: when the ap
 }
 ```
 
-**Bump `better-auth` + `@better-auth/cli`** from the existing `~1.4.21` to `latest` — this is required so the `@polar-sh/better-auth` plugin's expected peer version is satisfied. Both packages must resolve to the same minor.
-
-**Remove** `@sveltejs/adapter-auto`, `sveltekit-superforms` (never used — the spec explicitly forbids superforms).
+**Bump `better-auth` + `@better-auth/cli`** to `latest` — required so the `@polar-sh/better-auth` plugin's peer version is satisfied. Both must resolve to the same minor; keep `@better-auth/cli` in `devDependencies` (it's only the schema-generator CLI).
 
 **Add to `devDependencies`**: `"@sveltejs/adapter-node": "latest"`.
 
@@ -330,13 +330,23 @@ import type { Handle } from '@sveltejs/kit';
 export const handle: Handle = ({ event, resolve }) => resolve(event);
 ```
 
-- [ ] **Step 5: Replace `src/app.d.ts` with a minimal shell**
+- [ ] **Step 5: Replace `src/app.d.ts` with the full Locals shape**
+
+Define the final shape up front using loose types. Task 23 will tighten `session`/`activeMember` to the better-auth inferred types once the auth feature exports them. Doing this now prevents red intermediate states where handles or api modules reference `event.locals.X` with no type.
 
 ```typescript
-// Real Locals definition lands in Task 27 after the auth feature exports Session.
 declare global {
 	namespace App {
-		interface Locals {}
+		interface Locals {
+			// Tightened to inferred better-auth types in Task 23; loose here to unblock intermediates.
+			session: unknown;
+			activeMember: unknown;
+			context: {
+				requestId: string;
+				userId?: string;
+				orgId?: string;
+			};
+		}
 	}
 }
 
@@ -368,11 +378,14 @@ git commit -m "Remove demo route and stub auth/schema/hooks for rewrite"
 
 **Background:** Single source of typed env access. Fails fast with a readable error when required vars are missing. Uses `$env/dynamic/private` for runtime-variable values (so deploys can override without rebuild).
 
+**Background:** Two tiers of vars. **Required-always** must be set for the app to boot (DB, auth secret, URL, identity, Redis). **Optional-service** gates specific service features — missing values are allowed; the service logs a warning and degrades gracefully (or throws only if a request path actually invokes it). This lets local dev boot without Google / Polar / Axiom / S3 / Resend creds.
+
 - [ ] **Step 1: Write `src/lib/server/env.server.ts`**
 
 ```typescript
 import { env as dynamicEnv } from '$env/dynamic/private';
 
+// --- Required for boot ---------------------------------------------------
 const REQUIRED = [
 	'APP_NAME',
 	'APP_SLUG',
@@ -382,9 +395,14 @@ const REQUIRED = [
 	'DATABASE_URL',
 	'BETTER_AUTH_SECRET',
 	'BETTER_AUTH_URL',
+	'REDIS_URL'
+] as const;
+
+// --- Optional, each service guards on its own presence -------------------
+const OPTIONAL = [
 	'GOOGLE_CLIENT_ID',
 	'GOOGLE_CLIENT_SECRET',
-	'REDIS_URL',
+	'RESEND_API_KEY',
 	'POLAR_ACCESS_TOKEN',
 	'POLAR_WEBHOOK_SECRET',
 	'POLAR_SERVER',
@@ -398,19 +416,13 @@ const REQUIRED = [
 	'S3_SECRET_ACCESS_KEY'
 ] as const;
 
-const OPTIONAL = ['RESEND_API_KEY'] as const;
-
 type RequiredKey = (typeof REQUIRED)[number];
 type OptionalKey = (typeof OPTIONAL)[number];
 
-function read(): Record<RequiredKey | OptionalKey, string | undefined> {
-	const result: Record<string, string | undefined> = {};
-	for (const key of REQUIRED) result[key] = dynamicEnv[key];
-	for (const key of OPTIONAL) result[key] = dynamicEnv[key];
-	return result as Record<RequiredKey | OptionalKey, string | undefined>;
-}
+const raw: Record<RequiredKey | OptionalKey, string | undefined> = Object.fromEntries(
+	[...REQUIRED, ...OPTIONAL].map((k) => [k, dynamicEnv[k]])
+) as Record<RequiredKey | OptionalKey, string | undefined>;
 
-const raw = read();
 const missing = REQUIRED.filter((k) => !raw[k]);
 if (missing.length > 0) {
 	throw new Error(
@@ -420,6 +432,7 @@ if (missing.length > 0) {
 }
 
 export const env = {
+	// required
 	APP_NAME: raw.APP_NAME!,
 	APP_SLUG: raw.APP_SLUG!,
 	COOKIE_PREFIX: raw.COOKIE_PREFIX!,
@@ -428,26 +441,72 @@ export const env = {
 	DATABASE_URL: raw.DATABASE_URL!,
 	BETTER_AUTH_SECRET: raw.BETTER_AUTH_SECRET!,
 	BETTER_AUTH_URL: raw.BETTER_AUTH_URL!,
-	GOOGLE_CLIENT_ID: raw.GOOGLE_CLIENT_ID!,
-	GOOGLE_CLIENT_SECRET: raw.GOOGLE_CLIENT_SECRET!,
 	REDIS_URL: raw.REDIS_URL!,
+	// optional — callers decide how to handle undefined
+	GOOGLE_CLIENT_ID: raw.GOOGLE_CLIENT_ID,
+	GOOGLE_CLIENT_SECRET: raw.GOOGLE_CLIENT_SECRET,
 	RESEND_API_KEY: raw.RESEND_API_KEY,
-	POLAR_ACCESS_TOKEN: raw.POLAR_ACCESS_TOKEN!,
-	POLAR_WEBHOOK_SECRET: raw.POLAR_WEBHOOK_SECRET!,
-	POLAR_SERVER: raw.POLAR_SERVER! as 'sandbox' | 'production',
-	AXIOM_TOKEN: raw.AXIOM_TOKEN!,
-	AXIOM_DATASET_LOGS: raw.AXIOM_DATASET_LOGS!,
-	AXIOM_DATASET_TRACES: raw.AXIOM_DATASET_TRACES!,
-	S3_ENDPOINT: raw.S3_ENDPOINT!,
-	S3_REGION: raw.S3_REGION!,
-	S3_BUCKET: raw.S3_BUCKET!,
-	S3_ACCESS_KEY_ID: raw.S3_ACCESS_KEY_ID!,
-	S3_SECRET_ACCESS_KEY: raw.S3_SECRET_ACCESS_KEY!
+	POLAR_ACCESS_TOKEN: raw.POLAR_ACCESS_TOKEN,
+	POLAR_WEBHOOK_SECRET: raw.POLAR_WEBHOOK_SECRET,
+	POLAR_SERVER: (raw.POLAR_SERVER as 'sandbox' | 'production' | undefined) ?? 'sandbox',
+	AXIOM_TOKEN: raw.AXIOM_TOKEN,
+	AXIOM_DATASET_LOGS: raw.AXIOM_DATASET_LOGS,
+	AXIOM_DATASET_TRACES: raw.AXIOM_DATASET_TRACES,
+	S3_ENDPOINT: raw.S3_ENDPOINT,
+	S3_REGION: raw.S3_REGION,
+	S3_BUCKET: raw.S3_BUCKET,
+	S3_ACCESS_KEY_ID: raw.S3_ACCESS_KEY_ID,
+	S3_SECRET_ACCESS_KEY: raw.S3_SECRET_ACCESS_KEY
 } as const;
 
 export const isDev = process.env.NODE_ENV !== 'production';
 export const isProd = !isDev;
+
+// Helpers for optional services — each returns required values or throws with a focused message.
+export function requireGoogleOAuth() {
+	if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+		throw new Error('Google OAuth not configured: set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET');
+	}
+	return { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET };
+}
+
+export function requirePolar() {
+	if (!env.POLAR_ACCESS_TOKEN || !env.POLAR_WEBHOOK_SECRET) {
+		throw new Error('Polar not configured: set POLAR_ACCESS_TOKEN + POLAR_WEBHOOK_SECRET');
+	}
+	return {
+		accessToken: env.POLAR_ACCESS_TOKEN,
+		webhookSecret: env.POLAR_WEBHOOK_SECRET,
+		server: env.POLAR_SERVER
+	};
+}
+
+export function requireAxiom() {
+	if (!env.AXIOM_TOKEN || !env.AXIOM_DATASET_LOGS || !env.AXIOM_DATASET_TRACES) {
+		throw new Error('Axiom not configured: set AXIOM_TOKEN + AXIOM_DATASET_{LOGS,TRACES}');
+	}
+	return {
+		token: env.AXIOM_TOKEN,
+		datasetLogs: env.AXIOM_DATASET_LOGS,
+		datasetTraces: env.AXIOM_DATASET_TRACES
+	};
+}
+
+export function requireS3() {
+	const { S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY } = env;
+	if (!S3_ENDPOINT || !S3_REGION || !S3_BUCKET || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) {
+		throw new Error('S3 not configured: set S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY');
+	}
+	return { S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY };
+}
+
+export function requireResend() {
+	if (!env.RESEND_API_KEY) throw new Error('Resend not configured: set RESEND_API_KEY');
+	return { apiKey: env.RESEND_API_KEY };
+}
 ```
+
+Consumers call `requireX()` lazily at the point they need the value — not at module load — so dev can boot without them.
 
 - [ ] **Step 2: Verify**
 
@@ -477,12 +536,15 @@ git commit -m "Add typed env accessor with fail-fast required-var check"
 
 - [ ] **Step 1: Write `src/lib/shared/types/entitlements.ts`**
 
+`customerId` is part of this type because the Polar adapter stores the Polar customer's external id inside the entitlements jsonb (avoiding a schema change to add a dedicated `polarCustomerId` column). `null` until `ensureCustomer` runs.
+
 ```typescript
 import type { CustomerStateBenefitGrant } from '@polar-sh/sdk/models/components/customerstatebenefitgrant.js';
 import type { CustomerStateMeter } from '@polar-sh/sdk/models/components/customerstatemeter.js';
 import type { CustomerStateSubscription } from '@polar-sh/sdk/models/components/customerstatesubscription.js';
 
 export type Entitlements = {
+	customerId: string | null;
 	activeSubscriptions: CustomerStateSubscription[];
 	grantedBenefits: CustomerStateBenefitGrant[];
 	activeMeters: CustomerStateMeter[];
@@ -490,6 +552,7 @@ export type Entitlements = {
 };
 
 export const defaultEntitlements: Entitlements = {
+	customerId: null,
 	activeSubscriptions: [],
 	grantedBenefits: [],
 	activeMeters: [],
@@ -522,7 +585,13 @@ export function invariant(
 }
 
 export function getClientIp(request: Request): string | null {
-	return request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? null;
+	// x-forwarded-for is a comma-separated chain: "client, proxy1, proxy2". Take the first.
+	const xff = request.headers.get('x-forwarded-for');
+	if (xff) {
+		const first = xff.split(',')[0]?.trim();
+		if (first) return first;
+	}
+	return request.headers.get('x-real-ip')?.trim() || null;
 }
 ```
 
@@ -650,6 +719,14 @@ export const logger = pino(
 onShutdown('logger', () => new Promise<void>((resolve) => transport.end(() => resolve())));
 ```
 
+**Public contract — what `logger/index.ts` exports and nothing else:**
+
+```typescript
+export { logger } from './logger.server';
+```
+
+That's the entire public surface. `logger` is a `pino.Logger` — consumers treat it as an interface with `info/debug/warn/error/fatal/child`. Do not export pino internals, custom wrappers, or additional helpers. If someone wants structured fields, use `logger.child({...})` inline. The service is a thin configuration wrapper, not a logging framework.
+
 - [ ] **Step 2: Write `index.ts`**
 
 ```typescript
@@ -729,6 +806,14 @@ export function startTracing() {
 
 Note: the `@kubiks/otel-*` packages' exact export name may differ. If `pnpm check` reports `drizzleInstrumentation` missing, open the package's `dist` types and swap to the actual export (common variants: default export, `DrizzleInstrumentation` class). Do not silence the error.
 
+**Public contract — tracing exports exactly one function:**
+
+```typescript
+export function startTracing(): void;
+```
+
+Idempotent — second and later calls are no-ops. Never exports the SDK, exporter, or instrumentations to callers; if they need spans, they import `@opentelemetry/api` directly and use `trace.getTracer(...)`.
+
 - [ ] **Step 2: Write `index.ts`**
 
 ```typescript
@@ -737,9 +822,18 @@ export { startTracing } from './tracing.server';
 
 - [ ] **Step 3: Create `src/instrumentation.server.ts`**
 
+**Order-critical:** import `logger` *before* calling `startTracing()`. Both services register shutdown hooks via `onShutdown()` at module-load side-effect. Lifecycle runs hooks **LIFO**, so:
+
+- Logger imported first → registers first → runs **last** on shutdown.
+- Tracing registered second → runs **first** on shutdown.
+
+This is the order we want: tracing flushes spans (possibly emitting log lines during shutdown), then logger flushes pino's buffer, capturing every last log line — including those tracing just emitted. Reverse the order and you lose the final batch of logs.
+
 ```typescript
+import { logger } from '$services/logger'; // side-effect: registers shutdown hook FIRST
 import { startTracing } from '$services/tracing';
 
+logger.debug('instrumentation.server booting');
 startTracing();
 ```
 
@@ -1044,23 +1138,44 @@ If the old project shipped a mock for test scenarios, we drop it here — no tes
 
 Read `../blob-never/src/lib/server/services/polar/adapter.ts` for semantics. Port with:
 - Remove `try/catch/log/rethrow` — OTEL captures Polar SDK errors via `polarInstrumentation`.
-- Use `logger` from `$services/logger` for the one info-level log per op that indicates completion ("ensured polar customer for org X").
+- Use `logger` from `$services/logger` for one info-level log per op ("ensured polar customer for org X").
+
+**Contract — be strict about what `ensureCustomer` needs.** `organization.email` is nullable in our schema, so `ensureCustomer` cannot assume it's present. Accept a `creatorEmail` as a required parameter separately from `org`; the caller (`initializeOrganization` hook in Task 22) passes the creator member's user email. If neither `org.email` nor `creatorEmail` is available, throw with a clear message — Polar requires an email to attach a customer.
 
 Required exports:
 
 ```typescript
-export async function ensureCustomer(org: {
-	id: string;
-	name: string;
-	email: string | null;
-}): Promise<string>;  // returns Polar customer external id
+// Creates or fetches a Polar customer for the org, keyed by org.id as externalId.
+// Returns the Polar customer's external id.
+export async function ensureCustomer(
+	org: { id: string; name: string; email?: string | null },
+	creatorEmail: string  // required — caller provides from session.user.email
+): Promise<string>;
 
+// Fetches current subscriptions/benefits/meters from Polar for the org's customer,
+// writes them into organization.entitlements (including the customerId field).
 export async function syncOrgEntitlements(orgId: string): Promise<void>;
 
+// Verifies webhook signature with POLAR_WEBHOOK_SECRET, dispatches to syncOrgEntitlements
+// for affected orgs. Returns void; throws on invalid signature.
 export async function handlePolarWebhook(headers: Headers, body: string): Promise<void>;
 ```
 
-Implementation reads the Polar SDK's customers-by-external-id endpoint; creates if missing; writes returned entitlements into `organization.entitlements` via drizzle update. Keep under 150 lines total.
+Behaviour:
+- `ensureCustomer` calls `polarClient.customers.get({ externalId: org.id })`; if 404, creates with `email = org.email ?? creatorEmail`. Never silently falls back to a placeholder — if both are empty, throw.
+- `syncOrgEntitlements` reads the customer's active subscriptions/benefits/meters and writes the full `Entitlements` jsonb to `organization.entitlements` (including `customerId` — see Entitlements type update in Task 6).
+- `handlePolarWebhook` validates the `polar-signature` header via `env.POLAR_WEBHOOK_SECRET`, branches on `event.type`, and for org-affecting events resolves the `externalId` → `orgId` then calls `syncOrgEntitlements`.
+
+Keep under 180 lines total. Call `requirePolar()` from `env.server` inside the adapter (not at module load) so dev boots without Polar creds.
+
+**Public contract — `polar/index.ts` exports four names:**
+
+```typescript
+export { polarClient } from './client';                             // Polar SDK instance
+export { ensureCustomer, syncOrgEntitlements, handlePolarWebhook } from './adapter';
+```
+
+`polarClient` is exported for **read operations only** (e.g. fetching product lists from a pricing page). All **writes** that mutate the `organization.entitlements` jsonb go through adapter functions — callers never call `polarClient.customers.create(...)` directly. This keeps the entitlements invariant (including `customerId`) enforced in one place.
 
 - [ ] **Step 3: Write `index.ts`**
 
@@ -1299,20 +1414,19 @@ git commit -m "Add auth session-storage (Redis) and Polar plugin wiring"
 
 - [ ] **Step 1: Write `api/hooks.ts` (stubs)**
 
+**Before writing:** open `node_modules/better-auth/dist/types` (or the package's `.d.ts`) and confirm the `databaseHooks.user.create.before` / `.after` signatures. In better-auth ≥1.4, `before` receives `{ data: user, ctx }` and returns `{ data: newUser } | false | void`, not raw `user`. The types below use `BetterAuthOptions['databaseHooks']['user']['create']['before']` directly, which keeps us aligned with whatever shape the installed version emits — **don't hand-roll the signature**, lift it from the library.
+
 ```typescript
-// STUB — real implementations land in Task 22. Keep signatures in sync with usage in auth.ts.
+// STUB — real implementations land in Task 22. Signatures typed via better-auth's own options type.
 
 import type { BetterAuthOptions } from 'better-auth';
 
-type UserCreateBefore = NonNullable<
-	NonNullable<BetterAuthOptions['databaseHooks']>['user']
->['create'];
+type UserCreate = NonNullable<NonNullable<BetterAuthOptions['databaseHooks']>['user']>['create'];
+type BeforeFn = NonNullable<NonNullable<UserCreate>['before']>;
+type AfterFn = NonNullable<NonNullable<UserCreate>['after']>;
 
-export const beforeUserCreate: NonNullable<NonNullable<UserCreateBefore>['before']> = async (
-	user
-) => user;
-
-export const afterUserCreate: NonNullable<NonNullable<UserCreateBefore>['after']> = async () => {};
+export const beforeUserCreate: BeforeFn = async (...args) => args[0];
+export const afterUserCreate: AfterFn = async () => {};
 
 // Organization hooks (types come from better-auth organization plugin)
 export async function initializeOrganization(
@@ -1647,7 +1761,7 @@ Each table's column list:
 - `verification`: `id` (uuidv7 PK), `identifier`, `value`, `expiresAt`, timestamps. Index on `identifier`.
 - `member`: `id` (uuidv7 PK), `organizationId` → `organization.id` cascade, `userId` → `user.id` cascade, `role` default `'member'`, `createdAt`. Indexes + unique index on (`organizationId`, `userId`).
 - `invitation`: `id` (uuidv7 PK), `organizationId` → `organization.id` cascade, `email`, `role`, `status` default `'pending'`, `expiresAt`, `createdAt`, `inviterId` → `user.id` cascade. Indexes on `organizationId`, `email`, and `lower(email)`.
-- `auditLog`: `id` (uuidv7 PK), `action` typed as `AuditAction`, `actorId` → `user.id` onDelete set null, `targetType`, `targetId`, `metadata` jsonb, `ipAddress`, `userAgent`, `createdAt`. Indexes on `actorId` and `createdAt`.
+- `auditLog`: `id` (uuidv7 PK), `action` typed as `AuditAction`, `actorId` **nullable** uuid → `user.id` `onDelete: 'set null'` (the column must be nullable or the FK action fails at runtime — the old schema got this wrong with `.notNull()` + `set null`), `targetType` (not null), `targetId` (not null, uuid), `metadata` jsonb (nullable), `ipAddress` (nullable), `userAgent` (nullable), `createdAt` (not null, default now). Indexes on `actorId` and `createdAt`.
 
 `AuditAction` union: `'impersonation.start' | 'impersonation.stop' | 'user.ban' | 'user.unban' | 'user.role_change' | 'user.sessions_revoked' | 'organization.delete'`.
 
@@ -1753,6 +1867,14 @@ Implementation notes:
 - `listUserInvitations(email)` joins `invitation` ↔ `organization` where `invitation.email = lower(email)` and `status = 'pending'`.
 - Remove `invariant(...)` wrappers unless the old implementation genuinely needed them — better-auth already throws on missing session.
 
+**Onboarding flow — explicit decision (matches old project).** We do **not** auto-create an organization for new users without invitations. The flow is:
+
+1. User signs in for the first time → no org membership → redirect handle sends to `/onboarding`.
+2. On `/onboarding`: if invitations exist for their email, they can accept/decline; otherwise they explicitly create an org via the onboarding form.
+3. Org creation is a deliberate action by the user, so they name it (and trigger `ensureCustomer` with a real name) instead of landing on a "Untitled Organization" auto-creation.
+
+Don't add any "skip onboarding → auto-create" shortcut. It's tempting for better UX, but it silently provisions a Polar customer the user didn't ask for and creates orphan orgs when a user never returns.
+
 Port from the reference with these simplifications; keep under 150 lines total.
 
 - [ ] **Step 2: Verify**
@@ -1802,7 +1924,10 @@ export async function stopImpersonating(): Promise<unknown>;
 ```
 
 Simplifications to apply:
-- Remove all `try { await auth.api.X(...) } catch (err) { logger.error(...); throw err }` — OTEL captures. One exception: `clearMemberSessions` may swallow Redis-delete errors (warn-log) because the DB-level clear of `activeOrganizationId` is the source of truth.
+- Remove all `try { await auth.api.X(...) } catch (err) { logger.error(...); throw err }` — OTEL captures. **Do not swallow errors silently** anywhere else.
+- **Only explicit exception:** `clearMemberSessions` may warn-log-and-continue on Redis-delete failures because the DB-level clear of `activeOrganizationId` is the source of truth — Redis is just a cache. Comment the line with the justification.
+- Expected user-facing failures → `error(status, { code, message })`. Codes per the spec: `'VALIDATION'` (400), `'FORBIDDEN'` (403), `'NOT_FOUND'` (404), `'TOO_MANY_REQUESTS'` (429).
+- Unexpected failures → bubble. Never wrap in a try/catch that re-throws.
 - Collapse adjacent "doing X" + "did X" log pairs into one.
 - `getRequestEvent()` is called at most once per function.
 
@@ -2053,6 +2178,11 @@ git commit -m "Add shared form-handler helper for remote forms"
 **Reference:** `../blob-never/src/lib/features/auth/components/` — read each file and port with simplifications:
 - Drop `TEST_OTP` branching in `otp-form.svelte` if any — there is no test mode.
 - Keep the `formHandler` wrapping pattern.
+
+**Import rule for components** (don't get this wrong):
+- Components **inside** a feature import its remotes via the **internal** relative path (`../auth.remote`). This is fine and intentional — they're part of the same module, not external consumers.
+- Components **outside** a feature (routes, other features) always import via the public API (`$features/auth`). Never reach into `$features/auth/auth.remote` or `$features/auth/components/...` from outside.
+- Only re-export a symbol from `$features/auth/index.ts` if an external caller actually needs it. Don't re-export the internal forms used only by `auth.svelte` / `onboarding.svelte`.
 
 - [ ] **Step 1: Write each component**
 
@@ -2484,10 +2614,16 @@ Note: `$env/dynamic/public` only exposes env vars prefixed `PUBLIC_` — that's 
 
 - [ ] **Step 3: Write `(app)/+page.svelte`**
 
+No hardcoded product name; read from `$env/dynamic/public`.
+
 ```svelte
+<script lang="ts">
+	import { env } from '$env/dynamic/public';
+</script>
+
 <div class="p-8">
 	<h1 class="text-2xl font-semibold">Welcome</h1>
-	<p class="mt-2 text-sm text-muted-foreground">Your DMC workspace is ready.</p>
+	<p class="mt-2 text-sm text-muted-foreground">Your {env.PUBLIC_APP_NAME} workspace is ready.</p>
 </div>
 ```
 
@@ -2561,6 +2697,8 @@ git commit -m "Add (dev)/email-preview route for template iteration in dev"
 
 **Files:** none.
 
+**Substitute for tests.** Since the user excluded automated tests, each item below is a manual check with a concrete expected output. Run them in order; stop and fix before continuing if any fails.
+
 - [ ] **Step 1: Full lint + check + build**
 
 ```bash
@@ -2569,23 +2707,63 @@ pnpm check
 pnpm build
 ```
 
-All three must pass. Any warnings in build output related to OTEL auto-instrumentation bundling are expected — do **not** try to silence them with a Vite config change unless they cause the build to fail.
+All three must pass. OTEL auto-instrumentation warnings about `import-in-the-middle` during build are expected — do not silence them unless the build fails.
 
-- [ ] **Step 2: Sanity boot**
+- [ ] **Step 2: Schema drift check**
 
-Ensure `.env` is populated with real values (at least: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `REDIS_URL`, `AXIOM_*`, `COOKIE_PREFIX`, `APP_NAME`, `APP_SLUG`, `OTEL_SERVICE_NAME`, `EMAIL_FROM`, `POLAR_*`, `S3_*`, and `GOOGLE_CLIENT_*`). `RESEND_API_KEY` optional — emails log to stdout without it.
+Re-run the generator and diff its output against the hand-written schema:
 
 ```bash
+pnpm auth:schema
+git diff --stat src/lib/server/db/auth.schema.ts
+```
+
+If `auth.schema.ts` has changed since the last commit, a better-auth update has shifted the expected shape. Open it alongside `schema.ts` and confirm every table/column still matches. If a new column appears, add it to `schema.ts` + regenerate the migration. Revert the `auth.schema.ts` change only after confirming parity.
+
+- [ ] **Step 3: Migration sanity**
+
+```bash
+docker compose exec -T db psql -U root -d local -c '\d+ audit_log'
+```
+
+Expected: `action` is `text` (typed via `AuditAction` union at the TS layer), `actor_id` is `uuid` and **nullable** (FK `set null` requires it), `created_at` has `default now()`, indexes on `actor_id` and `created_at` exist. Repeat for `user`, `organization`, `session`, `member`, `invitation` — spot-check FK constraints.
+
+- [ ] **Step 4: Dev boot without optional secrets**
+
+In a terminal, unset optional vars and boot:
+
+```bash
+unset GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET RESEND_API_KEY \
+      POLAR_ACCESS_TOKEN POLAR_WEBHOOK_SECRET \
+      AXIOM_TOKEN AXIOM_DATASET_LOGS AXIOM_DATASET_TRACES \
+      S3_ENDPOINT S3_REGION S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY
 pnpm dev
 ```
 
-Open `http://localhost:5173`. Expected: redirect to `/sign-in` (because no session and `(app)` requires auth). Open `/sign-in` — see Google button + email form.
+Expected: server boots, logs go to stdout via pino-pretty (because `AXIOM_*` is unset → logger falls back to pretty), no crash at startup. If boot crashes, a service is reading an optional env var at module-load rather than via `requireX()`. Fix it before moving on.
 
-Do **not** run through the full sign-in flow as part of this step; a smoke boot is enough for the plan.
+- [ ] **Step 5: Auth route render**
 
-- [ ] **Step 3: Commit (if any incidental cleanups were needed during smoke)**
+With the dev server from Step 4 still running, restore `.env` (to get Google creds) and reload:
 
-If the smoke-test turned up a fix:
+```bash
+cp .env.example .env
+# …fill in real values for local dev…
+pnpm dev
+```
+
+Visit `http://localhost:5173`. Expected: redirect to `/sign-in`. The page shows a "Sign in with Google" button and an email input. No console errors in the browser. Navigate to `/sign-up` and `/onboarding` directly — both render their shells (onboarding redirects to `/sign-in` when not logged in, per the redirect handle).
+
+- [ ] **Step 6: Log + trace sanity**
+
+With `AXIOM_*` set, load the site, then query Axiom:
+
+- Logs dataset (`AXIOM_DATASET_LOGS`): expect at least one record with `service: env.OTEL_SERVICE_NAME` and a recent timestamp.
+- Traces dataset (`AXIOM_DATASET_TRACES`): expect a trace with `service.name: env.OTEL_SERVICE_NAME` and an HTTP server span for `GET /sign-in`.
+
+If no record appears after 30 seconds, check: `requireAxiom()` was called (grep pino transport config), network can reach `api.axiom.co`, token + dataset names match what's in the Axiom UI.
+
+- [ ] **Step 7: Commit (if any incidental cleanups were needed)**
 
 ```bash
 git add -A
@@ -2668,4 +2846,30 @@ EOF
    - `validateRoleChange` lives **only** in `queries.ts` (stubs in Task 18 Step 2, real impl in Task 20). Task 18 imports it from queries (not hooks). Task 22 does not mention it.
    - `getActiveMemberOrNull`, `listUserOrganizations`, `listUserInvitations`, `getUserInvitations`, `getSession`, `getSessionOrNull` all stubbed in Task 18 Step 2 with signatures matching Task 20's real impls.
 
-4. **Green-check invariant** — every task ends with `pnpm lint` + `pnpm check` passing and a commit. No step allows a red intermediate commit.
+4. **Green-check invariant** — every task ends with `pnpm lint` + `pnpm check` passing and a commit. No step allows a red intermediate commit. App.Locals shape defined up front (Task 4) so intermediates don't break on `event.locals.X`.
+
+5. **Env hygiene** — REQUIRED list trimmed to true boot prerequisites (DB, auth, Redis, identity). Google/Polar/Axiom/S3/Resend optional with `requireX()` guards called at use-site, not at module load (Task 5). Dev boots without those secrets (verified by Task 32 Step 4).
+
+6. **Better-auth type fidelity** — hook signatures lifted from `BetterAuthOptions` instead of hand-rolled (Task 18 Step 1). Validated against installed version before writing real impls (Task 22).
+
+7. **Polar contract** — `ensureCustomer(org, creatorEmail)` — creator email passed explicitly; never silently defaults to empty string. `Entitlements` type includes `customerId: string | null` (Task 6). All writes to `organization.entitlements` go through adapter (Task 13 public contract).
+
+8. **Lifecycle shutdown ordering** — tracing registers **after** logger (LIFO → tracing runs first → logger flushes last, capturing final logs). Instrumentation.server.ts enforces this import order (Task 9 Step 3).
+
+9. **Dependency classification** — `@better-auth/cli` + `shadcn-svelte` stay in devDependencies (CLI-only); `sveltekit-superforms` removed (not moved + removed); runtime libs in `dependencies`; `pnpm outdated` gate (Task 2).
+
+10. **Schema correctness** — `audit_log.actor_id` explicitly **nullable** because `onDelete: 'set null'` requires it (Task 19). Manual `\d+` check in smoke test (Task 32 Step 3).
+
+11. **Onboarding semantics** — explicit: no auto-create-org shortcut. User always chooses create/accept path (Task 20).
+
+12. **Remote/API boundaries** — components inside a feature use internal path (`../auth.remote`); external routes/features use public API (`$features/auth`). Only re-export what external callers use (Task 25, Task 26).
+
+13. **Hardcoded identity** — all UI copy reads `PUBLIC_APP_NAME` from `$env/dynamic/public`. Only remaining "DMC" strings are in `.env.example` defaults and the plan title (acceptable).
+
+14. **Error handling consistency** — expected → `error(code, message)`; unexpected → bubble. Only documented swallow is `clearMemberSessions` Redis cleanup with inline justification comment (Task 21).
+
+15. **getClientIp** — parses first value of `x-forwarded-for`, not the full header (Task 6).
+
+16. **Service abstraction weight** — each service's public contract is the minimal set of names it exports. Logger exports `logger` (pino instance); tracing exports `startTracing(): void`; polar exports `polarClient` + three adapter ops (Tasks 8, 9, 13).
+
+17. **Manual verification in lieu of tests** — 6-step smoke check covers lint+check+build, schema drift, migration sanity (FK nullability, indexes), dev boot without optional secrets, auth route render, log+trace sanity in Axiom (Task 32).
