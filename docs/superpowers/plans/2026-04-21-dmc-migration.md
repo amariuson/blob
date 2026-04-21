@@ -121,47 +121,57 @@ Expected: "On branch feat/dmc-auth-admin-migration. nothing to commit, working t
 - Modify: `package.json`
 - Modify: `svelte.config.js` (import swap)
 
-**Background:** Adding all runtime libs needed by services + auth feature. `@sveltejs/adapter-node` replaces `@sveltejs/adapter-auto` because pino/OTEL/Polar webhooks require Node.
+**Background:** Adding all runtime libs needed by services + auth feature. `@sveltejs/adapter-node` replaces `@sveltejs/adapter-auto` because pino/OTEL/Polar webhooks require Node. **Always pick the latest published version** for each package — no pinning to old majors. After installing, run `pnpm outdated` to catch anything that installed behind latest and bump it explicitly.
 
-- [ ] **Step 1: Edit `package.json`**
+Runtime packages must live in `dependencies`, not `devDependencies`: when the app is deployed via `adapter-node`, prod installs (`pnpm install --prod` or Docker images that skip dev deps) must still resolve runtime imports. Existing runtime packages currently in `devDependencies` move across in this task.
 
-Add to `dependencies` (create the section — currently everything is in `devDependencies`):
+- [ ] **Step 1: Edit `package.json` — create `dependencies` section and move runtime packages**
+
+**Move from `devDependencies` to `dependencies`** (runtime libs, must install in prod):
+
+`better-auth`, `@better-auth/cli`, `drizzle-orm`, `postgres`, `svelte`, `bits-ui`, `@tabler/icons-svelte`, `@internationalized/date`, `@tanstack/table-core`, `clsx`, `embla-carousel-svelte`, `formsnap`, `layerchart`, `mode-watcher`, `paneforge`, `shadcn-svelte`, `svelte-sonner`, `sveltekit-superforms`, `tailwind-merge`, `tailwind-variants`, `tw-animate-css`, `vaul-svelte`, `@fontsource-variable/geist`, `@fontsource-variable/merriweather`.
+
+**Keep in `devDependencies`** (build/check/lint-time only): `@eslint/compat`, `@eslint/js`, `@sveltejs/kit`, `@sveltejs/vite-plugin-svelte`, `@tailwindcss/vite`, `@types/node`, `drizzle-kit`, `eslint`, `eslint-config-prettier`, `eslint-plugin-svelte`, `globals`, `prettier`, `prettier-plugin-svelte`, `prettier-plugin-tailwindcss`, `svelte-check`, `tailwindcss`, `typescript`, `typescript-eslint`, `vite`.
+
+**Add new `dependencies`** (for the migration — use `latest` so pnpm picks current version at install time):
 
 ```json
-"dependencies": {
-  "@aws-sdk/client-s3": "^3.975.0",
-  "@aws-sdk/s3-request-presigner": "^3.975.0",
-  "@axiomhq/pino": "^1.3.0",
-  "@kubiks/otel-drizzle": "^2.1.0",
-  "@kubiks/otel-polar": "^1.0.1",
-  "@kubiks/otel-resend": "^1.1.0",
-  "@opentelemetry/api": "^1.9.0",
-  "@opentelemetry/auto-instrumentations-node": "^0.69.0",
-  "@opentelemetry/exporter-trace-otlp-proto": "^0.211.0",
-  "@opentelemetry/resources": "^2.5.0",
-  "@opentelemetry/sdk-node": "^0.211.0",
-  "@opentelemetry/semantic-conventions": "^1.39.0",
-  "@polar-sh/better-auth": "^1.6.4",
-  "@polar-sh/sdk": "^0.42.2",
-  "better-svelte-email": "^1.4.0",
-  "date-fns": "^4.1.0",
-  "dotenv": "^17.2.3",
-  "import-in-the-middle": "^2.0.5",
-  "ioredis": "^5.9.2",
-  "pino": "^10.3.0",
-  "pino-pretty": "^13.1.3",
-  "resend": "^6.8.0",
-  "runed": "^0.37.1",
-  "svelte-toolbelt": "^0.10.6",
-  "sveltekit-rate-limiter": "^0.7.0",
-  "uuidv7": "^1.1.0",
-  "zod": "^4.3.6"
+{
+  "@aws-sdk/client-s3": "latest",
+  "@aws-sdk/s3-request-presigner": "latest",
+  "@axiomhq/pino": "latest",
+  "@kubiks/otel-drizzle": "latest",
+  "@kubiks/otel-polar": "latest",
+  "@kubiks/otel-resend": "latest",
+  "@opentelemetry/api": "latest",
+  "@opentelemetry/auto-instrumentations-node": "latest",
+  "@opentelemetry/exporter-trace-otlp-proto": "latest",
+  "@opentelemetry/resources": "latest",
+  "@opentelemetry/sdk-node": "latest",
+  "@opentelemetry/semantic-conventions": "latest",
+  "@polar-sh/better-auth": "latest",
+  "@polar-sh/sdk": "latest",
+  "better-svelte-email": "latest",
+  "date-fns": "latest",
+  "dotenv": "latest",
+  "import-in-the-middle": "latest",
+  "ioredis": "latest",
+  "pino": "latest",
+  "pino-pretty": "latest",
+  "resend": "latest",
+  "runed": "latest",
+  "svelte-toolbelt": "latest",
+  "sveltekit-rate-limiter": "latest",
+  "uuidv7": "latest",
+  "zod": "latest"
 }
 ```
 
-In `devDependencies`:
-- Remove: `@sveltejs/adapter-auto`
-- Add: `"@sveltejs/adapter-node": "^5.4.0"`
+**Bump `better-auth` + `@better-auth/cli`** from the existing `~1.4.21` to `latest` — this is required so the `@polar-sh/better-auth` plugin's expected peer version is satisfied. Both packages must resolve to the same minor.
+
+**Remove** `@sveltejs/adapter-auto`, `sveltekit-superforms` (never used — the spec explicitly forbids superforms).
+
+**Add to `devDependencies`**: `"@sveltejs/adapter-node": "latest"`.
 
 - [ ] **Step 2: Update `svelte.config.js`**
 
@@ -173,13 +183,16 @@ import adapter from '@sveltejs/adapter-node';
 
 No other change.
 
-- [ ] **Step 3: Install**
+- [ ] **Step 3: Install + resolve**
 
 ```bash
 pnpm install
+pnpm outdated
 ```
 
-Expected: new `node_modules` entries, no errors. If `patches/@sveltejs__kit.patch` fails to apply due to version drift, keep the existing `@sveltejs/kit` version at `^2.57.0`.
+Expected install: no errors. If `patches/@sveltejs__kit.patch` fails to apply due to version drift, keep the existing `@sveltejs/kit` version at `^2.57.0` and try again; if the patch still fails, update the patch with `pnpm patch @sveltejs/kit` and re-apply the minimal change the patch was making.
+
+`pnpm outdated` must show no packages behind latest (modulo major-version breaking changes that the team hasn't adopted). If anything is behind, update `package.json` explicitly and re-install.
 
 - [ ] **Step 4: Verify**
 
@@ -194,16 +207,19 @@ Both must pass clean. If either fails, fix inline before committing.
 
 ```bash
 git add package.json pnpm-lock.yaml svelte.config.js
-git commit -m "Add runtime deps and swap to adapter-node"
+git commit -m "Move runtime deps to dependencies, add service libs, swap to adapter-node"
 ```
 
 ---
 
-## Task 3: Create `.env.example`
+## Task 3: Create `.env.example` and bootstrap `.env`
 
 **Files:**
 - Create: `.env.example`
-- Modify: `.gitignore` (ensure `.env` is listed — it probably already is, verify)
+- Create: `.env` (from `.env.example`; already gitignored)
+- Modify: `.gitignore` (verify `.env` listed)
+
+**Background:** `drizzle.config.ts` throws at import time if `DATABASE_URL` is unset, so `pnpm db:generate` / `pnpm db:migrate` / `pnpm auth:schema` all need `.env` populated *before* Task 19. `DATABASE_URL` must match `compose.yaml` which defines `POSTGRES_USER: root`, `POSTGRES_PASSWORD: mysecretpassword`, `POSTGRES_DB: local`.
 
 - [ ] **Step 1: Write `.env.example`**
 
@@ -215,8 +231,11 @@ COOKIE_PREFIX=dmc-app
 OTEL_SERVICE_NAME=dmc-app
 EMAIL_FROM="DMC <no-reply@example.com>"
 
+# Public (browser-accessible) copy of APP_NAME — read by $env/dynamic/public
+PUBLIC_APP_NAME=DMC
+
 # Core
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
+DATABASE_URL=postgres://root:mysecretpassword@localhost:5432/local
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=http://localhost:5173
 
@@ -256,12 +275,22 @@ grep -E '^\.env$' .gitignore || echo "MISSING"
 
 If it prints `MISSING`, append `.env` on its own line.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Bootstrap local `.env` from the example**
+
+```bash
+cp .env.example .env
+```
+
+Populate `BETTER_AUTH_SECRET` with an arbitrary 32+ character string for local dev — `openssl rand -hex 32`. Other values can stay at their example defaults; the migration scripts only need `DATABASE_URL` to be valid, and the dev server handles missing OAuth / Polar / Axiom gracefully (with warnings) for routes that don't exercise them.
+
+- [ ] **Step 4: Commit**
 
 ```bash
 git add .env.example .gitignore
-git commit -m "Add .env.example with identity + service vars"
+git commit -m "Add .env.example aligned with compose.yaml creds; add PUBLIC_APP_NAME"
 ```
+
+The actual `.env` file is gitignored so it won't be staged.
 
 ---
 
@@ -779,38 +808,39 @@ git commit -m "Add redis service: ioredis client with lifecycle shutdown"
 
 ## Task 11: Start Postgres 18 locally
 
-**Files:**
-- Modify (if needed): `compose.yaml`
+**Files:** none (verification only unless `compose.yaml` needs editing).
 
-- [ ] **Step 1: Check `compose.yaml` uses Postgres 18**
+**Background:** `compose.yaml` already declares `db` service on `postgres:18` with user `root`, password `mysecretpassword`, database `local`. Confirm with one read before starting.
+
+- [ ] **Step 1: Confirm `compose.yaml` pins Postgres 18**
 
 ```bash
-cat compose.yaml
+grep 'image:' compose.yaml
 ```
 
-If the `image:` line is anything other than `postgres:18` (e.g., `postgres:17`, `postgres:16`), edit it to `postgres:18` — `uuidv7()` is a native Postgres 18 function.
+Expected includes `image: postgres:18`. If not, edit the service image to `postgres:18` and recreate the container (`docker compose down -v && docker compose up -d db`).
 
-- [ ] **Step 2: Start the DB**
+- [ ] **Step 2: Start the DB + Redis**
 
 ```bash
 pnpm db:start
 ```
 
-Leave this running in a separate terminal. Verify it's up:
+This runs `docker compose up` (foreground). In a second terminal, verify both services are up:
 
 ```bash
 docker compose ps
 ```
 
-Expected: one `running` service.
+Expected: two `running` services, `db` and `redis`.
 
 - [ ] **Step 3: Confirm `uuidv7()` works**
 
 ```bash
-docker compose exec -T postgres psql -U postgres -c 'select uuidv7();'
+docker compose exec -T db psql -U root -d local -c 'select uuidv7();'
 ```
 
-Expected: one UUIDv7 value printed. If Postgres emits `ERROR: function uuidv7() does not exist`, the image is older than 18 — fix `compose.yaml` and recreate the container.
+Expected: one UUIDv7 value printed. If Postgres emits `ERROR: function uuidv7() does not exist`, the image is older than 18 — fix `compose.yaml` to `postgres:18` and recreate the container with `docker compose down -v && docker compose up -d`.
 
 - [ ] **Step 4: Commit (only if compose.yaml changed)**
 
@@ -1295,36 +1325,82 @@ export async function recordOrgDeletion(
 	_userId: string
 ): Promise<void> {}
 
-export async function validateRoleChange(
-	_member: { role: string },
-	_newRole: string,
-	_actorRole: string | undefined
-): Promise<void> {}
-
 export function validateInvitation(
 	_invitation: { role: string },
 	_inviter: { userId: string; role: string }
 ): void {}
 ```
 
-- [ ] **Step 2: Write `api/queries.ts` as a STUB too**
+Note: `validateRoleChange` lives in `queries.ts`, not `hooks.ts` — it reads DB state (current member's role) so it's a query by nature. Stub and real impl both live in queries.
 
-The organization hook `beforeUpdateMemberRole` calls `getActiveMemberOrNull`. Create the stub now:
+- [ ] **Step 2: Write `api/queries.ts` as a STUB**
+
+`auth.ts`'s `organizationHooks.beforeUpdateMemberRole` imports `getActiveMemberOrNull` and `validateRoleChange` from queries. Create both stubs now so the module compiles:
 
 ```typescript
-// STUB — real implementations land in Task 21.
+// STUB — real implementations land in Task 20.
 export async function getActiveMemberOrNull(): Promise<{ role: string } | null> {
 	return null;
 }
+
+export async function validateRoleChange(
+	_member: { role: string },
+	_newRole: string,
+	_actorRole: string | undefined
+): Promise<void> {}
+
+export async function getSession(): Promise<never> {
+	throw new Error('getSession stub — replaced in Task 20');
+}
+
+export async function getSessionOrNull(): Promise<null> {
+	return null;
+}
+
+export async function listUserOrganizations(): Promise<Array<{ id: string; createdAt: Date }>> {
+	return [];
+}
+
+export async function listUserInvitations(
+	_email: string
+): Promise<Array<{ id: string; organizationName: string; role: string }>> {
+	return [];
+}
+
+export async function getUserInvitations(): Promise<
+	Array<{ id: string; organizationName: string; role: string }>
+> {
+	return [];
+}
 ```
+
+These extra stubs cover everything `auth.ts`, `handles.ts`, and remote functions will import in later tasks — keeps the TypeScript surface clean through every intermediate step.
 
 - [ ] **Step 3: Write `api/mutations.ts` as a STUB**
 
-Organization `afterRemoveMember` calls `clearMemberSessions`. Stub:
+`auth.ts` and `handles.ts` import several mutations — stub all of them at the right signatures so no intermediate task breaks `pnpm check`:
 
 ```typescript
-// STUB — real implementations land in Task 22.
+// STUB — real implementations land in Task 21.
 export async function clearMemberSessions(_userId: string, _orgId: string): Promise<void> {}
+export async function setActiveOrganization(_organizationId: string): Promise<void> {}
+export async function sendEmailOTP(_data: { email: string }): Promise<void> {}
+export async function signInWithEmailOTP(_data: { email: string; otp: string }): Promise<never> {
+	throw new Error('stub');
+}
+export async function signInWithGoogle(): Promise<void> {}
+export async function signOutUser(): Promise<never> {
+	throw new Error('stub');
+}
+export async function createOrganizationOnboarding(_data: { name: string }): Promise<never> {
+	throw new Error('stub');
+}
+export async function acceptInvitationOnboarding(_data: { invitationId: string }): Promise<never> {
+	throw new Error('stub');
+}
+export async function declineInvitationOnboarding(_data: { invitationId: string }): Promise<void> {}
+export async function impersonateUser(_userId: string): Promise<void> {}
+export async function stopImpersonating(): Promise<void> {}
 ```
 
 - [ ] **Step 4: Write `auth.ts`**
@@ -1349,8 +1425,14 @@ import {
 import { logger } from '$services/logger';
 
 import { ac, roles } from '../access-control';
-import { afterUserCreate, beforeUserCreate, initializeOrganization, recordOrgDeletion, validateInvitation, validateRoleChange } from './api/hooks';
-import { getActiveMemberOrNull } from './api/queries';
+import {
+	afterUserCreate,
+	beforeUserCreate,
+	initializeOrganization,
+	recordOrgDeletion,
+	validateInvitation
+} from './api/hooks';
+import { getActiveMemberOrNull, validateRoleChange } from './api/queries';
 import { clearMemberSessions } from './api/mutations';
 import { createPolarPlugin } from './polar-plugin';
 import { createSessionStorage } from './session-storage';
@@ -1458,16 +1540,16 @@ export type Session = typeof auth.$Infer.Session;
 export type ActiveMember = Awaited<ReturnType<typeof auth.api.getActiveMember>>;
 ```
 
-- [ ] **Step 5: Verify**
+- [ ] **Step 5: Verify — MUST pass clean**
 
 ```bash
 pnpm lint
 pnpm check
 ```
 
-At this stage `db` import will fail because `src/lib/server/db/schema.ts` is the empty placeholder. Expected — we fix it in the next tasks. If `pnpm check` reports a TypeScript error about `db`, hold — we'll re-run after Task 20 and it must pass there.
+Both must pass with zero errors. `auth.ts` compiles cleanly even with the empty-schema placeholder because it only hands `db` to `drizzleAdapter(db, { provider: 'pg' })`, which is loosely typed and does not assert specific tables. The api stubs have no `db.query.X` calls yet.
 
-For this commit, move on if the only remaining errors are about `db`/`schema`. Any other errors (missing types from plugins, wrong import paths) must be fixed now.
+If `pnpm check` reports a TypeScript error, fix it now — do **not** commit red. The usual culprit is a missing import path or a missing export from a Task 12/15/17 service.
 
 - [ ] **Step 6: Commit**
 
@@ -1481,14 +1563,31 @@ git commit -m "Wire auth config + hook stubs (unblocks pnpm auth:schema)"
 ## Task 19: Generate reference schema and hand-write `schema.ts`
 
 **Files:**
+- Modify: `package.json` (update `auth:schema` script path)
 - Create: `src/lib/server/db/auth.schema.ts` (via `pnpm auth:schema`; reference only, never imported)
 - Create: `src/lib/server/db/schema.ts` (hand-written, replacing the Task 4 placeholder)
 - Create: `src/lib/server/db/utils.ts`
 - Modify: `src/lib/server/db/index.ts`
 
-**Background:** We cannot simply re-export `auth.schema.ts` from our schema — we need `uuidv7()` column defaults, relations, and the custom `auditLog` table, which the CLI doesn't emit. The CLI output serves as a column-shape reference.
+**Background:** We cannot simply re-export `auth.schema.ts` from our schema — we need `uuidv7()` column defaults, relations, and the custom `auditLog` table, which the CLI doesn't emit. The CLI output serves as a column-shape reference. The `auth:schema` script currently points at the old `src/lib/server/auth.ts` path (deleted in Task 4); update it before running.
 
-- [ ] **Step 1: Generate the reference**
+- [ ] **Step 1: Update `auth:schema` script in `package.json`**
+
+Replace:
+
+```json
+"auth:schema": "better-auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes"
+```
+
+with:
+
+```json
+"auth:schema": "better-auth generate --config src/lib/features/auth/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes"
+```
+
+- [ ] **Step 2: Generate the reference**
+
+Ensure `.env` (bootstrapped in Task 3) is loaded — the CLI reads `DATABASE_URL` transitively via the auth config's drizzle adapter. If the shell doesn't auto-load `.env`, prefix with `pnpm dotenv` or `dotenv -e .env --`:
 
 ```bash
 pnpm auth:schema
@@ -1496,7 +1595,7 @@ pnpm auth:schema
 
 Expected: writes `src/lib/server/db/auth.schema.ts`. This file is reference-only; `drizzle.config.ts` points at `schema.ts`, so `auth.schema.ts` is never imported.
 
-- [ ] **Step 2: Write `src/lib/server/db/utils.ts`**
+- [ ] **Step 3: Write `src/lib/server/db/utils.ts`**
 
 ```typescript
 import type { Entitlements } from '$lib/shared/types/entitlements';
@@ -1522,7 +1621,7 @@ export const entitlementsJsonb = customType<{ data: Entitlements; driverData: st
 });
 ```
 
-- [ ] **Step 3: Write `src/lib/server/db/schema.ts`**
+- [ ] **Step 4: Write `src/lib/server/db/schema.ts`**
 
 Hand-write every table mirroring `auth.schema.ts` column names/types/nullability exactly, but using our `uuidv7()` column helper for IDs. Drop `userPreferences`.
 
@@ -1556,7 +1655,7 @@ Relations to declare: `userRelations`, `sessionRelations`, `accountRelations`, `
 
 Imports: `uuidv7` and `entitlementsJsonb` from `./utils`; `defaultEntitlements` from `$lib/shared/types/entitlements`.
 
-- [ ] **Step 4: Update `src/lib/server/db/index.ts`**
+- [ ] **Step 5: Update `src/lib/server/db/index.ts`**
 
 ```typescript
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -1571,7 +1670,7 @@ const client = postgres(env.DATABASE_URL);
 export const db = drizzle(client, { schema });
 ```
 
-- [ ] **Step 5: Generate migration**
+- [ ] **Step 6: Generate migration**
 
 ```bash
 pnpm db:generate
@@ -1583,17 +1682,23 @@ Expected: writes a new migration file into `drizzle/` (or wherever `drizzle.conf
 2. Foreign-key constraints appear as `ALTER TABLE … ADD CONSTRAINT …` statements at the end of the file (Drizzle's standard output). They should resolve cleanly regardless of DDL order since `ALTER TABLE` fires after all tables exist.
 3. No reference to `user_preferences` — that table was dropped.
 
-- [ ] **Step 6: Apply migration**
+- [ ] **Step 7: Apply migration**
 
-Ensure `.env` has `DATABASE_URL` pointing at the local Postgres 18 from Task 11. Then:
+`.env` was bootstrapped in Task 3 with `DATABASE_URL=postgres://root:mysecretpassword@localhost:5432/local` — matching `compose.yaml`. Confirm the DB is up (Task 11) and run:
 
 ```bash
 pnpm db:migrate
 ```
 
-Expected: "migration applied" or similar. Verify with `docker compose exec postgres psql -U postgres -c '\dt'`.
+Expected: "migration applied" or similar. Verify the tables exist:
 
-- [ ] **Step 7: Verify**
+```bash
+docker compose exec -T db psql -U root -d local -c '\dt'
+```
+
+You should see: `user`, `session`, `account`, `verification`, `organization`, `member`, `invitation`, `audit_log`.
+
+- [ ] **Step 8: Verify**
 
 ```bash
 pnpm lint
@@ -1602,11 +1707,11 @@ pnpm check
 
 Both must pass clean — this is the first checkpoint where `auth.ts` compiles all the way through because `db` is now fully typed.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add src/lib/server/db/ drizzle/
-git commit -m "Hand-write schema.ts with uuidv7() defaults; generate initial migration"
+git add package.json src/lib/server/db/ drizzle/
+git commit -m "Hand-write schema.ts with uuidv7() defaults; fix auth:schema path; generate initial migration"
 ```
 
 ---
@@ -1752,10 +1857,10 @@ export function validateInvitation(
 ```
 
 Notes:
-- `initializeOrganization` calls `ensureCustomer(org)` from `$services/polar` and records the returned external customer id onto `organization.entitlements.customerId` (via drizzle update). If the adapter design from Task 13 stores `customerId` in the entitlements jsonb's own field, honour that; otherwise use a dedicated `organization.polarCustomerId` column — BUT that would require a schema change, so prefer the jsonb field.
+- `initializeOrganization` calls `ensureCustomer(org)` from `$services/polar` and records the returned external customer id onto `organization.entitlements.customerId` (via drizzle update). Store `customerId` inside the entitlements jsonb to avoid a schema change.
 - `recordOrgDeletion` writes an `auditLog` row with `action: 'organization.delete'`.
 - `validateInvitation` — admin cannot invite owner; only owner can invite admin; match the old `logic/validation.ts` rules exactly.
-- `validateRoleChange` lives in `queries.ts` (Task 20), not here — don't duplicate.
+- **`validateRoleChange` does NOT live here.** It's a query (reads current member roles from the DB) and stays in `queries.ts` — see Task 20. Don't import it into `hooks.ts` or re-declare it.
 
 - [ ] **Step 2: Verify**
 
@@ -2051,6 +2156,8 @@ Note: `getUserInvitations` must exist on `queries.ts` (Task 20). If it doesn't, 
 
 - [ ] **Step 2: Write `features/auth/index.ts`**
 
+Per CLAUDE.md (lines 101, 205), remote functions **must** be re-exported from the feature's client-safe `index.ts` so that routes and other features never import from `$features/auth/auth.remote` directly.
+
 ```typescript
 export { default as Auth } from './components/auth.svelte';
 export { default as Layout } from './components/layout.svelte';
@@ -2062,6 +2169,17 @@ export {
 	signInWithEmailOTPSchema
 } from './schemas';
 export { assignableRoles, roleDefinitions } from './access-control';
+export {
+	acceptInvitationForm,
+	createOrgOnboardingForm,
+	declineInvitationForm,
+	getSessionQuery,
+	getUserInvitationsQuery,
+	sendEmailOTPForm,
+	signInWithEmailOTPForm,
+	signInWithGoogleForm,
+	signOutUserForm
+} from './auth.remote';
 export type { ActiveMember, Session } from './server/auth';
 ```
 
@@ -2276,9 +2394,52 @@ git commit -m "Add admin client API, banner component, stop-impersonation form"
 
 - [ ] **Step 1: Write `app-sidebar.svelte`**
 
-Minimal shell: receives props `{ user: { name, email, avatar }; isAdmin: boolean; signOutUserForm }`. Renders `Sidebar.Root` with `Sidebar.Header` (product name from `$env/dynamic/public` or a hardcoded fallback until we pass it from the layout), `Sidebar.Content` (empty for now — nav items land when DMC features exist), `Sidebar.Footer` (user menu with sign-out button wired to `signOutUserForm`). If `isAdmin`, show a stub "Admin" button that does nothing for now.
+Minimal shell. **No hardcoded product name** — read from `$env/dynamic/public` which comes from `PUBLIC_APP_NAME` in `.env` (added in Task 3).
 
-Keep under 120 lines.
+```svelte
+<script lang="ts">
+	import { env } from '$env/dynamic/public';
+
+	import { formHandler } from '$lib/shared/form/form-handler.svelte';
+	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
+	import { Button } from '$lib/shared/components/ui/button';
+
+	type Props = {
+		user: { name: string; email: string; avatar: string };
+		isAdmin: boolean;
+		signOutUserForm: Parameters<typeof formHandler>[0];
+	};
+
+	let { user, isAdmin, signOutUserForm }: Props = $props();
+
+	const appName = env.PUBLIC_APP_NAME;
+</script>
+
+<Sidebar.Root>
+	<Sidebar.Header>
+		<div class="px-2 py-1 text-sm font-semibold">{appName}</div>
+	</Sidebar.Header>
+	<Sidebar.Content>
+		<!-- Nav items land when DMC features exist -->
+	</Sidebar.Content>
+	<Sidebar.Footer>
+		<div class="flex flex-col gap-1 px-2 py-2">
+			<div class="truncate text-sm font-medium">{user.name}</div>
+			<div class="truncate text-xs text-muted-foreground">{user.email}</div>
+			{#if isAdmin}
+				<Button variant="ghost" size="sm" class="mt-1 justify-start">Admin</Button>
+			{/if}
+			<form {...formHandler(signOutUserForm)}>
+				<Button variant="ghost" size="sm" class="mt-1 w-full justify-start" type="submit">
+					Sign out
+				</Button>
+			</form>
+		</div>
+	</Sidebar.Footer>
+</Sidebar.Root>
+```
+
+Note: `$env/dynamic/public` only exposes env vars prefixed `PUBLIC_` — that's why Task 3 adds `PUBLIC_APP_NAME` in addition to the server-side `APP_NAME`.
 
 - [ ] **Step 2: Write `(app)/+layout.svelte`**
 
@@ -2287,7 +2448,7 @@ Keep under 120 lines.
 	import type { Snippet } from 'svelte';
 
 	import { ImpersonationBanner } from '$features/admin';
-	import { getSessionQuery, signOutUserForm } from '$features/auth/auth.remote';
+	import { getSessionQuery, signOutUserForm } from '$features/auth';
 	import AppSidebar from '$lib/shared/components/sidebar/app-sidebar.svelte';
 	import * as Sidebar from '$lib/shared/components/ui/sidebar/index.js';
 
@@ -2478,19 +2639,33 @@ EOF
 ## Self-review checklist (for plan author)
 
 1. **Spec coverage** —
-   - Env-vars-only identity strings → Task 3, 5, 8, 9, 12, 18.
+   - Env-vars-only identity strings → Task 3, 5, 8, 9, 12, 18, 30 (sidebar now reads `PUBLIC_APP_NAME`).
    - `advanced.database.generateId: false` → Task 18, Step 4.
    - `storeSessionInDatabase + preserveSessionInDatabase` → Task 18, Step 4.
    - Hand-written `schema.ts` (not layered) → Task 19.
    - Polar adapter (customer provisioning) → Task 13, 22.
    - Lifecycle in shutdown order → Task 7, consumed by Tasks 8, 9, 10.
    - Axiom logs + traces → Task 8, 9.
-   - No hardcoded identity → Rule stated at top + enforced per task.
+   - No hardcoded identity → Rule stated at top + enforced per task; Task 30 reads `PUBLIC_APP_NAME`.
    - `userPreferences` dropped → Task 19 explicitly omits it.
    - Demo route + old auth stub removed → Task 4.
    - `(dev)/email-preview` kept, other dev routes dropped → Task 31.
    - Simplifications (hook collapses, log trimming, try/catch removal) → Tasks 20, 21, 22, 28.
+   - `auth:schema` script path updated → Task 19 Step 1.
+   - `.env` bootstrap (drizzle-kit will fail without it) → Task 3 Step 3.
+   - DB creds match `compose.yaml` (`root` / `mysecretpassword` / `local`) → Task 3, 11.
+   - Runtime deps moved to `dependencies` (adapter-node prod installs) → Task 2.
+   - Newest package versions (`latest`) + `pnpm outdated` check → Task 2.
+   - Remote functions re-exported from `$features/auth` (CLAUDE.md rule) → Task 26, consumed in Task 30.
 
 2. **Placeholder scan** — no "TBD", "add appropriate error handling", or "similar to Task N" instructions; all steps reference either concrete code or a specific source path in `../blob-never`. Component-port tasks (12, 25, 29) reference explicit source files, describe required public surface, and list concrete simplifications to apply.
 
-3. **Type consistency** — `AuditAction` union consistent between Task 19 (schema) and Task 28 (admin api). `Session` / `ActiveMember` exported in Task 18 (auth.ts), consumed in Task 20, 21, 23, 26, 28. `Entitlements` defined in Task 6, used in Tasks 13, 19. `env` object keys consistent between Tasks 3, 5, and every consumer.
+3. **Type consistency** —
+   - `AuditAction` union consistent between Task 19 (schema) and Task 28 (admin api).
+   - `Session` / `ActiveMember` exported in Task 18 (auth.ts), consumed in Task 20, 21, 23, 26, 28.
+   - `Entitlements` defined in Task 6, used in Tasks 13, 19.
+   - `env` object keys consistent between Tasks 3, 5, and every consumer.
+   - `validateRoleChange` lives **only** in `queries.ts` (stubs in Task 18 Step 2, real impl in Task 20). Task 18 imports it from queries (not hooks). Task 22 does not mention it.
+   - `getActiveMemberOrNull`, `listUserOrganizations`, `listUserInvitations`, `getUserInvitations`, `getSession`, `getSessionOrNull` all stubbed in Task 18 Step 2 with signatures matching Task 20's real impls.
+
+4. **Green-check invariant** — every task ends with `pnpm lint` + `pnpm check` passing and a commit. No step allows a red intermediate commit.
