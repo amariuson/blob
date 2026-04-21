@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-import { env, isDev } from '$lib/server/env.server';
+import { env, isDev, requireAxiom } from '$lib/server/env.server';
 
 import { onShutdown } from '../lifecycle';
 
@@ -9,10 +9,13 @@ const transport = isDev
 			target: 'pino-pretty',
 			options: { colorize: true, translateTime: 'SYS:HH:MM:ss' }
 		})
-	: pino.transport({
-			target: '@axiomhq/pino',
-			options: { dataset: env.AXIOM_DATASET_LOGS, token: env.AXIOM_TOKEN }
-		});
+	: (() => {
+			const axiom = requireAxiom();
+			return pino.transport({
+				target: '@axiomhq/pino',
+				options: { dataset: axiom.datasetLogs, token: axiom.token }
+			});
+		})();
 
 export const logger = pino(
 	{ level: isDev ? 'debug' : 'info', base: { service: env.OTEL_SERVICE_NAME } },
