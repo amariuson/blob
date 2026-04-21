@@ -1526,21 +1526,35 @@ export const entitlementsJsonb = customType<{ data: Entitlements; driverData: st
 
 Hand-write every table mirroring `auth.schema.ts` column names/types/nullability exactly, but using our `uuidv7()` column helper for IDs. Drop `userPreferences`.
 
-Port the full table definitions from `../blob-never/src/lib/server/db/schema.ts` (lines 1–297 minus lines 228–258). Specifically, the file should contain:
+**Declaration order matters.** Every `references(() => other.id)` requires `other` to be declared earlier in the file (TypeScript forward-reference resolution). Drizzle's generated SQL uses `ALTER TABLE … ADD CONSTRAINT` for FKs so the DDL itself is ordering-agnostic, but the TS module must still be topologically ordered. Write tables in this exact order:
 
-- `user` table (primary key, name, email, emailVerified, image, createdAt, updatedAt, role, banned, banReason, banExpires)
-- `session` table (id, expiresAt, token, createdAt, updatedAt, ipAddress, userAgent, userId → user, impersonatedBy, activeOrganizationId → organization)
-- `account` table (id, accountId, providerId, userId → user, tokens..., createdAt, updatedAt)
-- `verification` table (id, identifier, value, expiresAt, createdAt, updatedAt)
-- `organization` table (id, name, slug unique, logo, email, billingAddress jsonb, createdAt, metadata, entitlements jsonb with `defaultEntitlements`)
-- `member` table (id, organizationId → organization, userId → user, role default 'member', createdAt)
-- `invitation` table (id, organizationId → organization, email, role, status default 'pending', expiresAt, createdAt, inviterId → user)
-- `auditLog` table (id, action, actorId → user onDelete set null, targetType, targetId, metadata jsonb, ipAddress, userAgent, createdAt) with `AuditAction` union
-- `BillingAddress` type
-- `AuditAction` type: `'impersonation.start' | 'impersonation.stop' | 'user.ban' | 'user.unban' | 'user.role_change' | 'user.sessions_revoked' | 'organization.delete'`
-- All relations (`userRelations`, `sessionRelations`, `accountRelations`, `organizationRelations`, `memberRelations`, `invitationRelations`, `auditLogRelations`)
+1. `user` — no FK dependencies.
+2. `organization` — no FK dependencies (referenced by session/member/invitation).
+3. `session` — references `user`, `organization`.
+4. `account` — references `user`.
+5. `verification` — no FK dependencies.
+6. `member` — references `user`, `organization`.
+7. `invitation` — references `user`, `organization`.
+8. `auditLog` — references `user` (via `actorId`, `onDelete: 'set null'`). Must come **after** `user`.
+9. Type aliases: `BillingAddress`, `AuditAction`.
+10. All `relations(...)` declarations (can go in any order — they only consume already-declared tables).
 
-The imports should reference `uuidv7` and `entitlementsJsonb` from `./utils`, and use `defaultEntitlements` from `$lib/shared/types/entitlements`.
+Each table's column list:
+
+- `user`: `id` (uuidv7 PK), `name`, `email` unique, `emailVerified`, `image`, `createdAt`, `updatedAt`, `role`, `banned`, `banReason`, `banExpires`.
+- `organization`: `id` (uuidv7 PK), `name`, `slug` unique, `logo`, `email`, `billingAddress` jsonb, `createdAt`, `metadata`, `entitlements` jsonb (`entitlementsJsonb` custom type) with default `defaultEntitlements` from `$lib/shared/types/entitlements`.
+- `session`: `id` (uuidv7 PK), `expiresAt`, `token` unique, `createdAt`, `updatedAt`, `ipAddress`, `userAgent`, `userId` → `user.id` onDelete cascade, `impersonatedBy` (text), `activeOrganizationId` → `organization.id` onDelete set null. Index on `userId`.
+- `account`: `id` (uuidv7 PK), `accountId`, `providerId`, `userId` → `user.id` onDelete cascade, tokens, timestamps. Index on `userId` + unique index on (`providerId`, `accountId`).
+- `verification`: `id` (uuidv7 PK), `identifier`, `value`, `expiresAt`, timestamps. Index on `identifier`.
+- `member`: `id` (uuidv7 PK), `organizationId` → `organization.id` cascade, `userId` → `user.id` cascade, `role` default `'member'`, `createdAt`. Indexes + unique index on (`organizationId`, `userId`).
+- `invitation`: `id` (uuidv7 PK), `organizationId` → `organization.id` cascade, `email`, `role`, `status` default `'pending'`, `expiresAt`, `createdAt`, `inviterId` → `user.id` cascade. Indexes on `organizationId`, `email`, and `lower(email)`.
+- `auditLog`: `id` (uuidv7 PK), `action` typed as `AuditAction`, `actorId` → `user.id` onDelete set null, `targetType`, `targetId`, `metadata` jsonb, `ipAddress`, `userAgent`, `createdAt`. Indexes on `actorId` and `createdAt`.
+
+`AuditAction` union: `'impersonation.start' | 'impersonation.stop' | 'user.ban' | 'user.unban' | 'user.role_change' | 'user.sessions_revoked' | 'organization.delete'`.
+
+Relations to declare: `userRelations`, `sessionRelations`, `accountRelations`, `organizationRelations`, `memberRelations`, `invitationRelations`, `auditLogRelations`.
+
+Imports: `uuidv7` and `entitlementsJsonb` from `./utils`; `defaultEntitlements` from `$lib/shared/types/entitlements`.
 
 - [ ] **Step 4: Update `src/lib/server/db/index.ts`**
 
@@ -1563,7 +1577,11 @@ export const db = drizzle(client, { schema });
 pnpm db:generate
 ```
 
-Expected: writes a new migration file into `drizzle/` (or wherever `drizzle.config.ts` directs). Review the SQL — every `id` column should have `DEFAULT uuidv7()`. If any column is `TEXT` instead of `UUID`, stop and fix `schema.ts`.
+Expected: writes a new migration file into `drizzle/` (or wherever `drizzle.config.ts` directs). Review the SQL and confirm:
+
+1. Every `id` column reads `DEFAULT uuidv7()` (Postgres 18 native). If any column is `TEXT` instead of `UUID`, stop and fix `schema.ts`.
+2. Foreign-key constraints appear as `ALTER TABLE … ADD CONSTRAINT …` statements at the end of the file (Drizzle's standard output). They should resolve cleanly regardless of DDL order since `ALTER TABLE` fires after all tables exist.
+3. No reference to `user_preferences` — that table was dropped.
 
 - [ ] **Step 6: Apply migration**
 
