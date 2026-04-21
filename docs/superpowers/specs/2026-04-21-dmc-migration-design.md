@@ -136,6 +136,8 @@ src/lib/server/db/
 
 Typed accessor for all env vars. Uses `$env/static/private` where possible, `$env/dynamic/private` for runtime-variable values. Exports `env` object + `isDev` / `isProd`. Fails fast with an explicit error listing missing required vars.
 
+Includes **identity vars** (`APP_NAME`, `APP_SLUG`, `COOKIE_PREFIX`, `OTEL_SERVICE_NAME`, `EMAIL_FROM`) so no part of the code hardcodes the product name, cookie prefix, trace service name, log/trace dataset, or email sender. These are consumed by `logger/`, `tracing/`, `email/`, and the better-auth config.
+
 ### `lifecycle/`
 
 Small shutdown orchestrator — ~40 lines.
@@ -146,13 +148,13 @@ Small shutdown orchestrator — ~40 lines.
 
 ### `logger/`
 
-- Pino. In prod: `@axiomhq/pino` transport → dataset `AXIOM_DATASET_LOGS`. In dev: pino-pretty to stdout.
+- Pino. In prod: `@axiomhq/pino` transport → dataset `env.AXIOM_DATASET_LOGS`. In dev: pino-pretty to stdout. Base fields include `service: env.OTEL_SERVICE_NAME` so logs and traces correlate in Axiom.
 - Registers `onShutdown` to flush transport.
 - Exports `logger` (a pino instance). No child-logger mandate.
 
 ### `tracing/`
 
-- NodeSDK (`@opentelemetry/sdk-node`) with `OTLPTraceExporter` (proto) pointing at `https://api.axiom.co/v1/traces` with headers `Authorization: Bearer ${AXIOM_TOKEN}`, `X-Axiom-Dataset: ${AXIOM_DATASET_TRACES}`.
+- NodeSDK (`@opentelemetry/sdk-node`) with `OTLPTraceExporter` (proto) pointing at `https://api.axiom.co/v1/traces` with headers `Authorization: Bearer ${env.AXIOM_TOKEN}`, `X-Axiom-Dataset: ${env.AXIOM_DATASET_TRACES}`. Resource attribute `service.name` = `env.OTEL_SERVICE_NAME`.
 - Auto-instrumentations: `@opentelemetry/auto-instrumentations-node` + `@kubiks/otel-drizzle` + `@kubiks/otel-polar` + `@kubiks/otel-resend`.
 - `startTracing()` called from `src/instrumentation.server.ts`. Must run before any service imports that need instrumentation.
 - Registers `onShutdown(sdk.shutdown)`.
@@ -275,7 +277,7 @@ export { impersonateUser, stopImpersonating }; // consumed by admin feature
 - **better-auth config** (required settings, all load-bearing):
   - `advanced.database.generateId: false` — DB-level `uuidv7()` must own ID generation; without this, better-auth writes its own IDs and the DB default is ignored / conflicts on re-read.
   - `session.storeSessionInDatabase: true` + `preserveSessionInDatabase: true` — Redis is secondary (fast-path) storage; the DB remains the source of truth so audit trail, impersonation state, and admin session queries keep working even if Redis is wiped.
-  - `advanced.cookiePrefix: 'dmc-app'`.
+  - `advanced.cookiePrefix: env.COOKIE_PREFIX` (from env — differs per deploy).
   - Drizzle adapter, Redis `secondaryStorage`, email-OTP (8 digits, `randomInt`), Google OAuth, admin plugin with `adminRoles: ['superadmin']`, organization plugin with invitation/role-change/member-removal/org-delete hooks (all trigger emails), Polar plugin via `polar-plugin.ts`.
   - `databaseHooks.user.create` wires `beforeUserCreate` / `afterUserCreate` (in `api/hooks.ts`).
   - `organizationHooks.afterCreateOrganization` calls `$services/polar` `ensureCustomer(org)` to provision billing customer at org-creation time.
@@ -423,6 +425,13 @@ No `tsx`, no `tools/` folder, no test scripts.
 Single `.env.example` at repo root, grouped:
 
 ```
+# App identity — used for cookie prefix, OTEL service name, email "from" display
+APP_NAME=DMC
+APP_SLUG=dmc-app                         # lowercase, url/cookie-safe; used as cookie prefix
+COOKIE_PREFIX=dmc-app                    # better-auth cookie prefix; usually = APP_SLUG
+OTEL_SERVICE_NAME=dmc-app                # OTEL Resource service.name attribute
+EMAIL_FROM="DMC <no-reply@example.com>"  # Resend "from" header
+
 # Core
 DATABASE_URL=
 BETTER_AUTH_SECRET=
@@ -435,26 +444,28 @@ GOOGLE_CLIENT_SECRET=
 # Redis
 REDIS_URL=redis://localhost:6379
 
-# Email
+# Email (Resend)
 RESEND_API_KEY=
 
-# Billing
+# Billing (Polar)
 POLAR_ACCESS_TOKEN=
 POLAR_WEBHOOK_SECRET=
-POLAR_SERVER=sandbox
+POLAR_SERVER=sandbox                     # 'sandbox' | 'production'
 
-# Observability
+# Observability (Axiom)
 AXIOM_TOKEN=
-AXIOM_DATASET_LOGS=dmc-app-logs
-AXIOM_DATASET_TRACES=dmc-app-traces
+AXIOM_DATASET_LOGS=
+AXIOM_DATASET_TRACES=
 
-# Storage (S3-compatible)
+# Storage (S3-compatible — AWS / R2 / MinIO)
 S3_ENDPOINT=
 S3_REGION=
 S3_BUCKET=
 S3_ACCESS_KEY_ID=
 S3_SECRET_ACCESS_KEY=
 ```
+
+**Rule: no hardcoded identity strings anywhere in code.** Anything that names the product, deployment, dataset, or sender — cookie prefixes, OTEL service name, email "from", log/trace dataset names, Polar server selection — reads from `env.server.ts` and never appears as a string literal in feature or service code. This keeps staging/prod deploys isolated (separate cookies, separate traces) without code changes.
 
 ## Error handling conventions
 
