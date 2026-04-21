@@ -32,7 +32,7 @@
 | Tenancy              | Organization = DMC tenant. Members have roles `owner` / `admin` / `member`. Global `superadmin` sits outside orgs. | Matches old project. Correct fit for B2B SaaS billed per tenant.                                      |
 | Auth methods         | Email OTP (8 digits) + Google OAuth. No password.                                                                  | Matches old project.                                                                                  |
 | Database             | Postgres. Fresh wipe, no data to preserve. IDs use Postgres 18's native `uuidv7()` function at column default.     | Greenfield. `uuidv7` in the DB avoids an app-layer import for the common case.                        |
-| Schema source        | Generate base with `pnpm auth:schema` (better-auth CLI), then customise in `schema.ts`.                            | Guarantees better-auth required columns are present and correctly typed.                              |
+| Schema source        | Hand-written `schema.ts`. Generate `auth.schema.ts` with `pnpm auth:schema` as a **reference only** — it cannot be layered/overridden cleanly for native UUIDv7 defaults or custom relations. | Preserves exact better-auth column shapes (verified against CLI output) while keeping full control over column defaults, relations, and custom tables. |
 | Observability        | Axiom for both logs and traces via OTEL exporter + `@axiomhq/pino`.                                                | Replaces old pino-loki + Loki setup.                                                                  |
 | Adapter              | `@sveltejs/adapter-node`                                                                                           | Required by pino/OTEL/Polar webhooks; matches old project.                                            |
 | Adapter-auto removed | Yes                                                                                                                | Only works for edge runtimes that won't support Node OTEL.                                            |
@@ -43,7 +43,7 @@
 2. **One export = one responsibility.** No barrel re-exports unless consumed externally.
 3. **Remove dead branches.** No `TEST_OTP` / `isTestEnv()` plumbing (no tests).
 4. **Comments justify WHY.** If removing a comment wouldn't confuse a future reader, it goes.
-5. **No premature abstraction.** The Polar adapter layer from the old project is collapsed into the Polar client; `lifecycle/` stays because it solves a real ordering problem (see Services).
+5. **No premature abstraction** — *but* keep the abstractions that earn their keep: `lifecycle/` stays (solves a real shutdown-ordering problem), the Polar adapter layer stays (provides customer-provisioning hooks that the plain SDK client doesn't — see Services).
 6. **Types over runtime guards.** Drop `invariant(...)` calls where better-auth's return types already narrow.
 
 ## Top-level layout
@@ -105,22 +105,25 @@ Svelte config keeps `experimental.async`, `experimental.remoteFunctions`, `instr
 
 **Workflow**
 
-1. `pnpm auth:schema` writes `src/lib/server/db/auth.schema.ts` from the configured `auth` instance (admin + organization + emailOTP plugins must be wired first).
-2. `schema.ts` re-exports from `auth.schema.ts` and layers:
-   - ID defaults switched to `uuid('id').primaryKey().default(sql\`uuidv7()\`)` (Postgres 18 native).
-   - `organization.entitlements` jsonb (for Polar) via `additionalFields` on plugin config.
-   - `session.impersonatedBy` + `session.activeOrganizationId` (better-auth plugins).
+1. Wire `better-auth` config (admin + organization + emailOTP plugins + `advanced.database.generateId: false`) — **critical**: without `generateId: false`, better-auth emits its own non-UUID IDs at insert time, which collides with the DB's `default uuidv7()` and produces type errors on every write.
+2. Run `pnpm auth:schema` to emit `src/lib/server/db/auth.schema.ts` — **reference only**. Do not import it from the drizzle client; do not re-export from `schema.ts`. Its role is a CI-verifiable snapshot of what better-auth expects.
+3. Hand-write `schema.ts` with every table. Mirror column types/names/nullability from `auth.schema.ts` exactly. Apply:
+   - ID columns: `uuid('id').primaryKey().default(sql\`uuidv7()\`)` (Postgres 18 native).
+   - `organization.entitlements` jsonb (populated by Polar plugin via `additionalFields`).
+   - `session.impersonatedBy` + `session.activeOrganizationId` (better-auth admin + organization plugins).
    - Manual `auditLog` table with typed `AuditAction` union.
-   - `relations(...)` declarations (CLI emits tables only).
-3. `drizzle-kit generate` produces one initial migration.
-4. `drizzle-kit migrate` applies it.
+   - `relations(...)` declarations.
+4. `drizzle-kit generate` → one initial migration.
+5. `drizzle-kit migrate` applies it.
+
+**Drift protection:** re-running `pnpm auth:schema` after a better-auth upgrade produces a new `auth.schema.ts`; diff it against `schema.ts` by eye to catch new/renamed columns. Keep this as a manual pre-upgrade checklist item.
 
 **Files**
 
 ```
 src/lib/server/db/
-├── auth.schema.ts   # generated; do not hand-edit
-├── schema.ts        # re-exports + auditLog + relations + uuidv7() defaults
+├── auth.schema.ts   # reference snapshot from `pnpm auth:schema` — NOT imported anywhere
+├── schema.ts        # hand-written tables, relations, auditLog, uuidv7() defaults
 ├── index.ts         # drizzle client, fails fast on missing DATABASE_URL
 └── utils.ts         # entitlements jsonb typing helper
 ```
@@ -179,11 +182,18 @@ Dev-without-`RESEND_API_KEY` mode: log rendered email to console instead of send
 
 ```
 polar/
-├── index.ts     # re-export polarClient
-└── client.ts    # factory: production client (real SDK) or dev mock, selected by POLAR_SERVER
+├── index.ts                # re-exports polarClient + adapter helpers
+├── client.ts               # factory: production (real SDK) or dev mock, selected by POLAR_SERVER
+└── adapter.ts              # higher-level ops: ensureCustomer, syncOrgEntitlements, webhook dispatch
 ```
 
-No adapter wrapper — the `@polar-sh/better-auth` plugin consumes the client directly.
+Adapter layer is **retained** from the old project — the bare `@polar-sh/better-auth` plugin does not provide the customer-provisioning hook that needs to fire when an organization is created during onboarding (and when its billing metadata changes later). The adapter wraps the SDK with:
+
+- `ensureCustomer(org)` — idempotent: looks up or creates a Polar customer keyed on the org id, returns external customer reference stored on `organization.entitlements.customerId`.
+- `syncOrgEntitlements(orgId)` — fetches active subscriptions/benefits/meters for the org's Polar customer, writes them to `organization.entitlements` jsonb.
+- Webhook dispatch handlers (subscription.created, benefit.granted, etc.) that call `syncOrgEntitlements`.
+
+The auth feature's `organizationHooks.afterCreateOrganization` calls `ensureCustomer` here.
 
 ### `storage/`
 
@@ -262,7 +272,13 @@ export { impersonateUser, stopImpersonating }; // consumed by admin feature
 
 - **Setup handle** seeds `event.locals.context = { requestId, userId?, orgId? }` and caches `session` + `activeMember` in `event.locals` to avoid N+1 better-auth calls per request.
 - **Redirect handle**: auto-selects most-recently-created org on login; redirects no-org users to `/onboarding`; bounces signed-in users off `(auth)`, signed-out users off `(app)`.
-- **better-auth config**: drizzle adapter, Redis `secondaryStorage`, email-OTP (8 digits, `randomInt`), Google OAuth, admin plugin with `adminRoles: ['superadmin']`, organization plugin with invitation/role-change/member-removal/org-delete hooks (all trigger emails), Polar plugin via `polar-plugin.ts`.
+- **better-auth config** (required settings, all load-bearing):
+  - `advanced.database.generateId: false` — DB-level `uuidv7()` must own ID generation; without this, better-auth writes its own IDs and the DB default is ignored / conflicts on re-read.
+  - `session.storeSessionInDatabase: true` + `preserveSessionInDatabase: true` — Redis is secondary (fast-path) storage; the DB remains the source of truth so audit trail, impersonation state, and admin session queries keep working even if Redis is wiped.
+  - `advanced.cookiePrefix: 'dmc-app'`.
+  - Drizzle adapter, Redis `secondaryStorage`, email-OTP (8 digits, `randomInt`), Google OAuth, admin plugin with `adminRoles: ['superadmin']`, organization plugin with invitation/role-change/member-removal/org-delete hooks (all trigger emails), Polar plugin via `polar-plugin.ts`.
+  - `databaseHooks.user.create` wires `beforeUserCreate` / `afterUserCreate` (in `api/hooks.ts`).
+  - `organizationHooks.afterCreateOrganization` calls `$services/polar` `ensureCustomer(org)` to provision billing customer at org-creation time.
 - **Impersonation API**: wraps better-auth admin-plugin methods so admin feature never reaches into better-auth directly.
 
 ### Deliberate simplifications
@@ -466,14 +482,16 @@ The detailed per-step plan is produced by the `writing-plans` skill. High-level:
 
 1. Dependencies + `.env.example` + adapter swap.
 2. `env.server.ts` + `lifecycle/` + `logger/` + `tracing/` + `instrumentation.server.ts` + Axiom wiring.
-3. `redis/` + `email/` (templates included) + `polar/` + `storage/`.
-4. Auth feature — schemas, access-control, `better-auth` config, `api/*`, handles.
-5. `pnpm auth:schema` → customise IDs to `uuidv7()` in `schema.ts` → `drizzle-kit generate` → migrate.
-6. Auth remote + components + `(auth)` routes + `app.d.ts`.
-7. Admin feature (backend + banner).
-8. `(app)` shell + route cleanup (delete `demo/`, replace `+page.svelte`).
-9. `(dev)/email-preview`.
-10. Final: full `pnpm lint && pnpm check && pnpm build` smoke test.
+3. `redis/` + `email/` (templates included) + `polar/` (client + adapter) + `storage/`.
+4. Auth feature **config-only** first pass — `access-control.ts`, `server/auth.ts` with plugins wired (`generateId: false`, `storeSessionInDatabase: true`, `preserveSessionInDatabase: true`), but `databaseHooks` / `organizationHooks` referencing `api/hooks.ts` stubs that just `return`.
+5. Schema layer — `pnpm auth:schema` emits `auth.schema.ts` (reference only); hand-write `schema.ts` mirroring it with `uuidv7()` defaults + relations + `auditLog`; `drizzle-kit generate` → migrate.
+6. Auth `api/*` real implementations — `queries.ts`, `mutations.ts`, `hooks.ts` (replacing stubs from step 4).
+7. Auth handles (`server/handles.ts`) + `hooks.server.ts` wiring + `app.d.ts`.
+8. Auth remote + components + `(auth)` routes.
+9. Admin feature (backend + banner component).
+10. `(app)` shell + route cleanup (delete `demo/`, replace `+page.svelte`).
+11. `(dev)/email-preview`.
+12. Final: full `pnpm lint && pnpm check && pnpm build` smoke test.
 
 Each step ends on a green tree.
 
