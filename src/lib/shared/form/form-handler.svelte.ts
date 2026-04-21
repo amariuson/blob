@@ -18,7 +18,9 @@ type RemoteFormLike<Input, Output> = {
 		callback: (opts: {
 			form: HTMLFormElement;
 			data: Input;
-			submit: () => Promise<void>;
+			submit: () => Promise<boolean> & {
+				updates: (...updates: never[]) => Promise<boolean>;
+			};
 		}) => void | Promise<void>
 	): { method: 'POST'; action: string };
 };
