@@ -1,10 +1,11 @@
+import { instrumentDrizzleClient } from '@kubiks/otel-drizzle';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import * as schema from './schema';
-import { env } from '$env/dynamic/private';
 
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+import { env } from '$lib/server/env.server';
+
+import * as schema from './schema';
 
 const client = postgres(env.DATABASE_URL);
 
-export const db = drizzle(client, { schema });
+export const db = instrumentDrizzleClient(drizzle(client, { schema }));
