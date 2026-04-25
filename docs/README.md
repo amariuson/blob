@@ -1,9 +1,20 @@
 # Project Documentation
 
-Living documentation for the platform. Two kinds of documents live here:
+Living documentation for the platform. Three kinds of documents live here:
 
-- **[System overview](./system-overview.md)** — what the platform does, who uses it, how the features connect, and the typical end-to-end workflow. Read this first.
+- **[System overview](./system-overview.md)** — short orientation: what the platform does, who uses it, how the features connect. Read this first if you have ten minutes.
+- **[System spec](./specs/specs-part-1.md)** — the comprehensive v1 specification, in five parts. Read this when you actually need the detail.
 - **Architecture Decision Records (ADRs)** — append-only record of specific technical decisions and their tradeoffs. Indexed below.
+
+## System spec (5 parts)
+
+The spec describes _what the system does_; ADRs describe _how we build it_.
+
+1. [**Foundations**](./specs/specs-part-1.md) — purpose, personas, glossary, multi-tenancy, feature map.
+2. [**Contacts, Sales Pipeline, Pricing Engine**](./specs/specs-part-2.md) — org+person model, lead → quote → booking lifecycle, line-item pricing, FX, GIT, RRULE, rate sources.
+3. [**Communication & AI**](./specs/specs-part-3.md) — connected mailboxes, AI tagging/drafting, MCP-based itinerary chat, lead → itinerary generation, cost ceilings.
+4. [**Operations & Surfaces**](./specs/specs-part-4.md) — sales attribution with team splits, tasks, documents, client portal with Level-1 e-sign, notifications, customizable roles.
+5. [**Platform**](./specs/specs-part-5.md) — external integrations, full entity diagram, end-to-end workflow, subscription, payments shape (deferred), GDPR posture, observability, non-goals.
 
 ## Architecture Decision Records
 
