@@ -1,6 +1,13 @@
-# Architecture Decision Records
+# Project Documentation
 
-This folder contains the architectural decision records (ADRs) for the project. Each ADR captures a single decision, the context that motivated it, and its consequences.
+Living documentation for the platform. Two kinds of documents live here:
+
+- **[System overview](./system-overview.md)** — what the platform does, who uses it, how the features connect, and the typical end-to-end workflow. Read this first.
+- **Architecture Decision Records (ADRs)** — append-only record of specific technical decisions and their tradeoffs. Indexed below.
+
+## Architecture Decision Records
+
+Each ADR captures a single decision, the context that motivated it, and its consequences.
 
 ## Why ADRs
 
