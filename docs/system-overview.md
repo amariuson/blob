@@ -62,6 +62,8 @@ What the system can do, grouped by area:
 
 ### Payments _(scope deferred)_
 
+These are the DMC's operational payments — money flowing in from their clients and out to their suppliers. **Distinct from the platform's own subscription billing**, which is handled by Polar (see integrations below).
+
 - Inbound: invoice clients (deposit, balance), reconcile receipts.
 - Outbound: schedule and track supplier payouts.
 - Provider choice and detailed flow are decided at implementation time.
@@ -186,16 +188,16 @@ sequenceDiagram
 
 ## External integrations
 
-| Integration                        | Purpose                                                                                         | Adapter?                                  |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| **Mailbox provider** (Nylas first) | Connect Gmail/Microsoft, sync messages, send mail, receive webhooks.                            | Yes — provider may change.                |
-| **AI provider** (Anthropic Claude) | Tag inbound, extract entity links, generate draft replies.                                      | Yes — model/provider selection swappable. |
-| **Polar**                          | Client-side billing for the DMC's subscription to the platform.                                 | Existing adapter.                         |
-| **Resend**                         | Transactional outbound mail _from the platform itself_ (auth, notifications) — not client mail. | No.                                       |
-| **Cloudflare R2**                  | Attachments, vouchers, generated PDFs.                                                          | No.                                       |
-| **PostgreSQL**                     | System of record.                                                                               | n/a                                       |
-| **Redis**                          | Sessions, rate limits, short-TTL caches.                                                        | n/a                                       |
-| **OpenTelemetry / Loki**           | Tracing + structured logs.                                                                      | n/a                                       |
+| Integration                        | Purpose                                                                                                           | Adapter?                                  |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Mailbox provider** (Nylas first) | Connect Gmail/Microsoft, sync messages, send mail, receive webhooks.                                              | Yes — provider may change.                |
+| **AI provider** (Anthropic Claude) | Tag inbound, extract entity links, generate draft replies.                                                        | Yes — model/provider selection swappable. |
+| **Polar**                          | Subscription billing for the DMC's account on this platform. Not used for the DMC's own client/supplier payments. | Existing adapter.                         |
+| **Resend**                         | Transactional outbound mail _from the platform itself_ (auth, notifications) — not client mail.                   | No.                                       |
+| **Cloudflare R2**                  | Attachments, vouchers, generated PDFs.                                                                            | No.                                       |
+| **PostgreSQL**                     | System of record.                                                                                                 | n/a                                       |
+| **Redis**                          | Sessions, rate limits, short-TTL caches.                                                                          | n/a                                       |
+| **OpenTelemetry / Loki**           | Tracing + structured logs.                                                                                        | n/a                                       |
 
 The mailbox and AI integrations get adapter interfaces (per [ADR-0003](./adr/0003-service-layer-pure-logic-thin-io.md)) because we expect to swap implementations. Resend/R2/Polar are used directly because their replacement is unlikely.
 
