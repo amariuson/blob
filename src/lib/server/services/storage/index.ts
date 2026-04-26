@@ -1,14 +1,16 @@
 export {
 	type AllowedDocumentType,
 	type AllowedImageType,
-	deleteObject,
-	extractKeyFromUrl,
 	generateKey,
-	generateUploadUrl,
-	getPublicUrl,
 	isAllowedDocumentType,
 	isAllowedImageType,
-	isR2Url,
-	StorageError,
 	validateFileSize
+} from './logic';
+export {
+	deleteObject,
+	extractKeyFromUrl,
+	generateUploadUrl,
+	getPublicUrl,
+	isR2Url,
+	StorageError
 } from './storage.server';

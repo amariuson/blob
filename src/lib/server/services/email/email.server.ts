@@ -2,9 +2,12 @@ import { RESEND_API_KEY, RESEND_SEND_EMAIL_ADDRESS } from '$env/static/private';
 
 import { isTestEnv } from '$lib/server/env.server';
 import { logger } from '$services/logger';
+import { withSpan } from '$services/tracing';
 
 import { Resend } from 'resend';
 import { instrumentResend } from '@kubiks/otel-resend';
+
+import { recipientCount } from './logic';
 
 const resend = instrumentResend(new Resend(RESEND_API_KEY));
 
@@ -20,35 +23,37 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions) {
 		throw new Error('Either html or text must be provided');
 	}
 
-	const recipientCount = Array.isArray(to) ? to.length : 1;
+	const count = recipientCount(to);
 
-	// Skip sending emails in dev mode and E2E tests
 	if (isTestEnv()) {
-		logger.info({ to, subject, recipientCount, skipped: true }, 'Email sending skipped (test env)');
+		logger.info(
+			{ to, subject, recipientCount: count, skipped: true },
+			'Email sending skipped (test env)'
+		);
 		return { id: `mock-${Date.now()}` };
 	}
 
-	logger.debug({ to, subject, recipientCount }, 'Sending email');
+	return withSpan(
+		'email.send',
+		{ 'email.subject': subject, 'email.recipient_count': count },
+		async () => {
+			logger.debug({ to, subject, recipientCount: count }, 'Sending email');
 
-	const emailPayload = {
-		from: RESEND_SEND_EMAIL_ADDRESS,
-		to,
-		subject,
-		html,
-		text
-	} as Parameters<typeof resend.emails.send>[0];
+			const { data, error } = await resend.emails.send({
+				from: RESEND_SEND_EMAIL_ADDRESS,
+				to,
+				subject,
+				html,
+				text
+			} as Parameters<typeof resend.emails.send>[0]);
 
-	const { data, error } = await resend.emails.send(emailPayload);
+			if (error) {
+				logger.error({ to, subject, recipientCount: count, err: error }, 'Failed to send email');
+				throw new Error(`Failed to send email: ${error.message}`);
+			}
 
-	if (error) {
-		logger.error(
-			{ to, subject, recipientCount, error, errorMessage: error.message },
-			'Failed to send email'
-		);
-		throw new Error(`Failed to send email: ${error.message}`);
-	}
-
-	logger.info({ to, subject, emailId: data?.id, recipientCount }, 'Email sent successfully');
-
-	return data;
+			logger.info({ to, subject, emailId: data?.id, recipientCount: count }, 'Email sent');
+			return data;
+		}
+	);
 }
